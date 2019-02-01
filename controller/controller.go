@@ -20,8 +20,15 @@ type Controller struct {
 	Logger *log.Entry
 }
 
+// NewController ...
+func NewController(addr string) Controller {
+	var c Controller
+	c.setup(addr)
+	return c
+}
+
 // Setup intilises the logger and server
-func (c *Controller) Setup(addr string) {
+func (c *Controller) setup(addr string) {
 	c.Logger = log.WithFields(log.Fields{"package": "controller"})
 
 	c.Logger.Debug("Setting up the server")
