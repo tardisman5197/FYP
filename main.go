@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"./simulation"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,9 +27,9 @@ func main() {
 	logger := log.WithFields(log.Fields{"package": "main"})
 	logger.Info("Server Starting")
 
-	// // Test Sim
-	// sim := simulation.NewSimulation()
-	// sim.RunSteps(15)
+	// Test Sim
+	sim := simulation.NewSimulation()
+	sim.RunSteps(50)
 
 	// // Create a controler and start listening
 	// c := controller.NewController(serverAddr)

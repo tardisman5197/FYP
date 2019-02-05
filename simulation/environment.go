@@ -60,8 +60,7 @@ func (e *Environment) WriteShapeFile(fileName string) {
 	// points to write
 	points := []shp.Point{
 		shp.Point{0.0, 0.0},
-		shp.Point{0.0, 10.0},
-		shp.Point{20.0, 10.0},
+		shp.Point{30.0, 30.0},
 	}
 
 	// fields to write

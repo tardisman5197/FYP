@@ -1,12 +1,16 @@
 package simulation
 
-import log "github.com/sirupsen/logrus"
+import (
+	"../view"
+	log "github.com/sirupsen/logrus"
+)
 
 // Simulation stores all the details of a traffic simulation.
 type Simulation struct {
 	shouldStop  bool
 	agents      []Agent
 	environment Environment
+	currentTick int
 
 	Logger *log.Entry
 }
@@ -31,7 +35,7 @@ func NewSimulation() Simulation {
 	sim.environment.ReadShapefile("resources/test.shp")
 
 	// TEMP Setup test vehicle
-	startLoc := Vector{x: 0, y: 0}
+	startLoc := sim.environment.waypoints[0]
 	sim.agents = append(sim.agents,
 		NewVehicle(0, startLoc, 2, 2, 0, sim.environment.waypoints))
 
@@ -66,6 +70,8 @@ func (s *Simulation) RunSteps(noOfSteps int) {
 func (s *Simulation) runOneStep() {
 	var toRemove []int
 
+	s.currentTick++
+
 	// Loop over each agent and execute act function
 	for i := 0; i < len(s.agents); i++ {
 		removeAgent := false
@@ -82,6 +88,8 @@ func (s *Simulation) runOneStep() {
 	for i := 0; i < len(toRemove); i++ {
 		s.removeAgent(toRemove[i])
 	}
+
+	s.getImage()
 }
 
 // Stop sets the simulation's shouldStop variable to true.
@@ -96,4 +104,19 @@ func (s *Simulation) Stop() {
 func (s *Simulation) removeAgent(index int) {
 	s.Logger.Infof("Removing Agent: %v", s.agents[index].GetID())
 	s.agents = append(s.agents[:index], s.agents[index+1:]...)
+}
+
+func (s *Simulation) getImage() {
+	var wp [][]float64
+	for _, cwp := range s.environment.waypoints {
+		wp = append(wp, cwp.ConvertToSlice())
+	}
+
+	var a [][]float64
+	for _, ca := range s.agents {
+		cp := ca.GetPosition()
+		a = append(a, cp.ConvertToSlice())
+	}
+
+	view.GenImg(wp, a, s.currentTick)
 }

@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const margin = 3.0
+const margin = 1.0
 
 // Agent is an interface that models any actors that may apear in
 // the simulation
@@ -132,13 +132,61 @@ func (v *Vehicle) updateSpeed() {
 // the vehicles new velocity and position.
 func (v *Vehicle) updatePosition() {
 	// Convert the vehicle's current speed into its x and y velocitys
-	angle := math.Atan((v.currentWaypoint.x - v.position.x) /
-		(v.currentWaypoint.y - v.position.y))
 
-	v.position.x += v.speed * math.Sin(angle)
-	v.position.y += v.speed * math.Cos(angle)
+	// Go East
+	if v.currentWaypoint.x > v.position.x {
+		// Go North
+		if v.currentWaypoint.y < v.position.y {
+			// NE
+			// a = Atan(py-ty/tx-px)
+			// y' = -s(Sin(a))
+			// x' = s(Cos(a))
+			dy := v.position.y - v.currentWaypoint.y
+			dx := v.currentWaypoint.x - v.position.x
+			angle := math.Atan(dy / dx)
 
-	v.Logger.Debugf("P: %v", v.position)
+			v.position.y -= v.speed * math.Sin(angle)
+			v.position.x += v.speed * math.Cos(angle)
+		} else {
+
+			// SE
+			// a = Atan(ty-py/tx-px)
+			// y' = s(Sin(a))
+			// x' = s(Cos(a))
+			dy := v.currentWaypoint.y - v.position.y
+			dx := v.currentWaypoint.x - v.position.x
+			angle := math.Atan(dy / dx)
+
+			v.position.y += v.speed * math.Sin(angle)
+			v.position.x += v.speed * math.Cos(angle)
+		}
+	} else {
+
+		// Go North
+		if v.currentWaypoint.y < v.position.y {
+			// NW
+			// a = Atan(py-ty/px-tx)
+			// y' = -s(Sin(a))
+			// x' = -s(Cos(a))
+			dy := v.position.y - v.currentWaypoint.y
+			dx := v.position.x - v.currentWaypoint.x
+			angle := math.Atan(dy / dx)
+
+			v.position.y -= v.speed * math.Sin(angle)
+			v.position.x -= v.speed * math.Cos(angle)
+		} else {
+			// SW
+			// a = Atan(ty-py/px-tx)
+			// y' = s(Sin(a))
+			// x' = -s(Cos(a))
+			dy := v.currentWaypoint.y - v.position.y
+			dx := v.position.x - v.currentWaypoint.x
+			angle := math.Atan(dy / dx)
+
+			v.position.y += v.speed * math.Sin(angle)
+			v.position.x -= v.speed * math.Cos(angle)
+		}
+	}
 }
 
 // getNextWaypoint gets the vehicles next waypoint from the route.
