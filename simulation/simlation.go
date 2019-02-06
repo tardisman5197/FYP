@@ -37,7 +37,19 @@ func NewSimulation() Simulation {
 	// TEMP Setup test vehicle
 	startLoc := sim.environment.waypoints[0]
 	sim.agents = append(sim.agents,
-		NewVehicle(0, startLoc, 2, 2, 0, sim.environment.waypoints))
+		NewVehicle(0, startLoc, 2, 5, 2, 2, sim.environment.waypoints[1:]))
+
+	startLoc = Vector{x: 2, y: 2}
+	sim.agents = append(sim.agents,
+		NewVehicle(1, startLoc, 0, 5, 1, 2, sim.environment.waypoints[1:]))
+
+	startLoc = Vector{x: 3, y: 3}
+	sim.agents = append(sim.agents,
+		NewVehicle(2, startLoc, 1, 5, 1, 2, sim.environment.waypoints[1:]))
+
+	startLoc = Vector{x: 4, y: 4}
+	sim.agents = append(sim.agents,
+		NewVehicle(3, startLoc, 0, 5, 1, 2, sim.environment.waypoints[1:]))
 
 	return sim
 }

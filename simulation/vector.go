@@ -28,3 +28,15 @@ func (v *Vector) ConvertToSlice() []float64 {
 	s = append(s, v.y)
 	return s
 }
+
+// Equals checks if the given vector has the same values.
+func (v *Vector) Equals(other Vector) bool {
+	return v.x == other.x && v.y == other.y
+}
+
+// DistanceTo calculates the distance to a target.
+func (v *Vector) DistanceTo(target Vector) float64 {
+	dx := v.x - target.x
+	dy := v.y - target.y
+	return math.Sqrt((dx * dx) + (dy * dy))
+}
