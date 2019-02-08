@@ -17,7 +17,7 @@ type Simulation struct {
 
 // NewSimulation creates a new Simulation struct
 // and initlises some of the values.
-func NewSimulation() Simulation {
+func NewSimulation(env Environment) Simulation {
 	var sim Simulation
 
 	// Setup Logger
@@ -29,27 +29,7 @@ func NewSimulation() Simulation {
 	// If set to true the simulation will stop running.
 	sim.shouldStop = false
 
-	// Get a new Environment and set
-	sim.environment = NewEnvironment()
-	sim.environment.WriteShapeFile("resources/test.shp")
-	sim.environment.ReadShapefile("resources/test.shp")
-
-	// TEMP Setup test vehicle
-	startLoc := sim.environment.waypoints[0]
-	sim.agents = append(sim.agents,
-		NewVehicle(0, startLoc, 2, 5, 2, 2, sim.environment.waypoints[1:]))
-
-	startLoc = Vector{x: 2, y: 2}
-	sim.agents = append(sim.agents,
-		NewVehicle(1, startLoc, 0, 5, 1, 2, sim.environment.waypoints[1:]))
-
-	startLoc = Vector{x: 3, y: 3}
-	sim.agents = append(sim.agents,
-		NewVehicle(2, startLoc, 1, 5, 1, 2, sim.environment.waypoints[1:]))
-
-	startLoc = Vector{x: 4, y: 4}
-	sim.agents = append(sim.agents,
-		NewVehicle(3, startLoc, 0, 5, 1, 2, sim.environment.waypoints[1:]))
+	sim.environment = env
 
 	return sim
 }
@@ -71,6 +51,9 @@ func (s *Simulation) RunSteps(noOfSteps int) {
 	for i := 0; i < noOfSteps; i++ {
 		s.runOneStep()
 
+		// if i%5 == 0 {
+		s.getImage()
+		// }
 		if s.shouldStop {
 			break
 		}
@@ -100,8 +83,6 @@ func (s *Simulation) runOneStep() {
 	for i := 0; i < len(toRemove); i++ {
 		s.removeAgent(toRemove[i])
 	}
-
-	s.getImage()
 }
 
 // Stop sets the simulation's shouldStop variable to true.
@@ -109,6 +90,12 @@ func (s *Simulation) runOneStep() {
 // simulation to stop at the end of the current tick.
 func (s *Simulation) Stop() {
 	s.shouldStop = true
+}
+
+// AddAgent adds an agent to the simulation.
+func (s *Simulation) AddAgent(newAgent Agent) {
+	s.Logger.Info("Adding an Agent")
+	s.agents = append(s.agents, newAgent)
 }
 
 // removeAgent removes the agent at a specified index from the simulation's

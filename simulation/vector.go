@@ -8,6 +8,14 @@ type Vector struct {
 	y float64
 }
 
+// NewVector creates an instance of a Vector.
+func NewVector(x float64, y float64) Vector {
+	v := Vector{}
+	v.x = x
+	v.y = y
+	return v
+}
+
 // Magnitude calclates the overall vector.
 func (v *Vector) Magnitude() float64 {
 	return math.Sqrt((v.x * v.x) + (v.y * v.y))

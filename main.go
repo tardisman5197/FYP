@@ -27,14 +27,45 @@ func main() {
 	logger := log.WithFields(log.Fields{"package": "main"})
 	logger.Info("Server Starting")
 
-	// Test Sim
-	sim := simulation.NewSimulation()
-	sim.RunSteps(50)
-
+	demo()
 	// // Create a controler and start listening
 	// c := controller.NewController(serverAddr)
 	// c.Listen()
 
 	// Once the http server is no longer listening the server stops
 	logger.Warn("Server Stopping")
+}
+
+func demo() {
+	// Create the environment
+	env := simulation.NewEnvironment()
+	env.WriteShapeFile("resources/test.shp")
+	env.ReadShapefile("resources/test.shp")
+
+	waypoints := env.GetWaypoints()
+
+	// Test Sim
+	sim := simulation.NewSimulation(env)
+
+	// TEMP Setup test vehicle
+
+	startLoc := simulation.NewVector(0, 0)
+	sim.AddAgent(simulation.NewVehicle(0, startLoc, 0, 5, 1, 1, waypoints[1:]))
+
+	sim.RunSteps(10)
+
+	startLoc = simulation.NewVector(0, 0)
+	sim.AddAgent(simulation.NewVehicle(1, startLoc, 0, 10, 2, 2, waypoints[1:]))
+
+	sim.RunSteps(10)
+
+	startLoc = simulation.NewVector(0, 0)
+	sim.AddAgent(simulation.NewVehicle(2, startLoc, 0, 8, 2, 2, waypoints[1:]))
+
+	sim.RunSteps(10)
+
+	startLoc = simulation.NewVector(0, 0)
+	sim.AddAgent(simulation.NewVehicle(3, startLoc, 0, 10, 2, 2, waypoints[1:]))
+
+	sim.RunSteps(100)
 }

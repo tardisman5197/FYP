@@ -105,7 +105,30 @@ func (v Vehicle) GetCurrentWaypoint() Vector {
 // updateVelocity calculates the vehicles next velocity based upon
 // the vehicle's surroundings.
 func (v *Vehicle) updateSpeed(agents []Agent) {
+	// Slow down to touch waypoint
+	distanceToWaypoint := v.position.DistanceTo(v.currentWaypoint)
+	if distanceToWaypoint <= v.speed {
+		v.speed = distanceToWaypoint
+
+		v.Logger.Debugf("Waypoint, v: %v", v.speed)
+		return
+	}
+
+	// Adjust Speed based on other agents
 	_, gap := v.getVehicleInfront(agents)
+
+	// Slowing down due to other cars:
+	//	Each vehicle (speed v) with gap ≤ v−d reduces its speed to gap: v → gap.
+	//	if gap ≤ v-d then v = gap
+	if gap <= v.speed-v.decceleration {
+		v.speed = gap - v.decceleration
+		if v.speed < 0 {
+			v.speed = 0
+		}
+
+		v.Logger.Debugf("Gap, v: %v", v.speed)
+		return
+	}
 
 	// Acceleration of free vehicles:
 	// 	Each vehicle of speed v < vmax with gap ≥ v+1 accelerates to v+1.
@@ -121,15 +144,6 @@ func (v *Vehicle) updateSpeed(agents []Agent) {
 		return
 	}
 
-	// Slowing down due to other cars:
-	//	Each vehicle (speed v) with gap ≤ v−d reduces its speed to gap: v → gap.
-	//	if gap ≤ v-d then v = gap
-	if gap <= v.speed-v.decceleration {
-		v.speed = gap
-		v.Logger.Debugf("Gap, v: %v", v.speed)
-		return
-	}
-
 	// Randomization:
 	//	Each vehicle reduces its speed by deceleration with probability
 	//	1/2: v → max[ v − 1, 0 ]
@@ -138,6 +152,7 @@ func (v *Vehicle) updateSpeed(agents []Agent) {
 		if v.speed < 0.0 {
 			v.speed = 0.0
 		}
+
 		v.Logger.Debugf("Decceleration, v: %v", v.speed)
 		return
 	}

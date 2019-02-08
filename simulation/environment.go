@@ -28,6 +28,11 @@ func NewEnvironment() Environment {
 	return env
 }
 
+// GetWaypoints returns the waypoints from that environment.
+func (e *Environment) GetWaypoints() []Vector {
+	return e.waypoints
+}
+
 // ReadShapefile takes a shape file and sets up the environment.
 func (e *Environment) ReadShapefile(fileName string) {
 	shape, err := shp.Open(fileName)
@@ -60,7 +65,9 @@ func (e *Environment) WriteShapeFile(fileName string) {
 	// points to write
 	points := []shp.Point{
 		shp.Point{0.0, 0.0},
-		shp.Point{30.0, 30.0},
+		shp.Point{300.0, 300.0},
+		shp.Point{200.0, 300.0},
+		shp.Point{100.0, 200.0},
 	}
 
 	// fields to write
