@@ -29,9 +29,9 @@ type Vehicle struct {
 	// acceleration stores the rate at which the
 	// vehicle can increase its speed.
 	acceleration float64
-	// decceleration stroes the rate at which the
+	// deceleration stores the rate at which the
 	// vehicle can decrease its speed.
-	decceleration float64
+	deceleration float64
 
 	// Logger is used to give a context based log to the stdout
 	Logger *log.Entry
@@ -45,7 +45,7 @@ func NewVehicle(
 	startSpeed float64,
 	maxSpeed float64,
 	acceleration float64,
-	decceleration float64,
+	deceleration float64,
 	route []Vector) Vehicle {
 
 	rand.Seed(time.Now().Unix())
@@ -63,7 +63,7 @@ func NewVehicle(
 	v.speed = startSpeed
 	v.maxSpeed = maxSpeed
 	v.acceleration = acceleration
-	v.decceleration = decceleration
+	v.deceleration = deceleration
 	v.route = route
 	// Get the first waypoint
 	v.getNextWaypoint()
@@ -105,6 +105,11 @@ func (v Vehicle) GetCurrentWaypoint() Vector {
 // updateVelocity calculates the vehicles next velocity based upon
 // the vehicle's surroundings.
 func (v *Vehicle) updateSpeed(agents []Agent) {
+	// 1. Slow down to touch waypoint
+	// 2. Slow down due to other agents
+	// 3. Accelerate if space
+	// 4. Random Decelerate
+
 	// Slow down to touch waypoint
 	distanceToWaypoint := v.position.DistanceTo(v.currentWaypoint)
 	if distanceToWaypoint <= v.speed {
@@ -114,17 +119,19 @@ func (v *Vehicle) updateSpeed(agents []Agent) {
 		return
 	}
 
-	// Adjust Speed based on other agents
-	_, gap := v.getVehicleInfront(agents)
+	// Get the agent infront
+	c, gap := v.getVehicleInfront(agents)
+	if c != nil {
+		v.Logger.Debugf("A: %v, Gap: %v", c.GetID(), gap)
+	}
 
 	// Slowing down due to other cars:
 	//	Each vehicle (speed v) with gap ≤ v−d reduces its speed to gap: v → gap.
 	//	if gap ≤ v-d then v = gap
-	if gap <= v.speed-v.decceleration {
-		v.speed = gap - v.decceleration
-		if v.speed < 0 {
-			v.speed = 0
-		}
+	if gap <= v.speed {
+		v.speed = gap
+		// decelerate to create a gap between the vehicles
+		v.decelerate()
 
 		v.Logger.Debugf("Gap, v: %v", v.speed)
 		return
@@ -134,13 +141,7 @@ func (v *Vehicle) updateSpeed(agents []Agent) {
 	// 	Each vehicle of speed v < vmax with gap ≥ v+1 accelerates to v+1.
 	// 	if v < vmax & gap ≥ v + a then v = v + a
 	if v.speed < v.maxSpeed && gap >= v.speed+v.acceleration {
-		v.speed += v.acceleration
-		// Check if exceeded max speed
-		if v.speed > v.maxSpeed {
-			v.speed = v.maxSpeed
-		}
-
-		v.Logger.Debugf("Acceleration, v: %v", v.speed)
+		v.accelerate()
 		return
 	}
 
@@ -148,14 +149,11 @@ func (v *Vehicle) updateSpeed(agents []Agent) {
 	//	Each vehicle reduces its speed by deceleration with probability
 	//	1/2: v → max[ v − 1, 0 ]
 	if rand.Float64() >= decelerationProbability {
-		v.speed -= v.decceleration
-		if v.speed < 0.0 {
-			v.speed = 0.0
-		}
-
-		v.Logger.Debugf("Decceleration, v: %v", v.speed)
+		v.decelerate()
 		return
 	}
+
+	v.Logger.Debugf("Const, v: %v", v.speed)
 }
 
 // updatePosition uses the vehicle's current speed to calculate
@@ -284,4 +282,28 @@ func (v *Vehicle) getVehicleInfront(agents []Agent) (closest Agent, distance flo
 		}
 	}
 	return
+}
+
+// accelerate increases the vehicles speed. When a vehicle reaches its maximum
+// speed the vehicle can no longer accelerate.
+func (v *Vehicle) accelerate() {
+	v.speed += v.acceleration
+	// Check if exceeded max speed
+	if v.speed > v.maxSpeed {
+		v.speed = v.maxSpeed
+	}
+
+	v.Logger.Debugf("Acc. v: %v", v.speed)
+}
+
+// decelerate decreases the vehicles speed. A vehicle can only decelerate to
+// a speed of 0.
+func (v *Vehicle) decelerate() {
+	v.speed -= v.deceleration
+
+	if v.speed < 0 {
+		v.speed = 0
+	}
+
+	v.Logger.Debugf("Dec. v: %v", v.speed)
 }

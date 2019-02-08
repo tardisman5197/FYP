@@ -50,22 +50,38 @@ func demo() {
 	// TEMP Setup test vehicle
 
 	startLoc := simulation.NewVector(0, 0)
-	sim.AddAgent(simulation.NewVehicle(0, startLoc, 0, 5, 1, 1, waypoints[1:]))
+	route := waypoints[1:]
+	startSpeed := 0.0
 
-	sim.RunSteps(10)
+	id := 0
+	maxSpeed := 8.0
+	acc := 3.0
+	dec := 3.0
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
 
-	startLoc = simulation.NewVector(0, 0)
-	sim.AddAgent(simulation.NewVehicle(1, startLoc, 0, 10, 2, 2, waypoints[1:]))
+	sim.RunSteps(5)
 
-	sim.RunSteps(10)
+	id = 1
+	maxSpeed = 10.0
+	acc = 3.0
+	dec = 3.0
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
 
-	startLoc = simulation.NewVector(0, 0)
-	sim.AddAgent(simulation.NewVehicle(2, startLoc, 0, 8, 2, 2, waypoints[1:]))
+	sim.RunSteps(5)
 
-	sim.RunSteps(10)
+	id = 2
+	maxSpeed = 10.0
+	acc = 4.0
+	dec = 4.0
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
 
-	startLoc = simulation.NewVector(0, 0)
-	sim.AddAgent(simulation.NewVehicle(3, startLoc, 0, 10, 2, 2, waypoints[1:]))
+	sim.RunSteps(5)
+
+	id = 3
+	maxSpeed = 80.0
+	acc = 5.0
+	dec = 5.0
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
 
 	sim.RunSteps(100)
 }

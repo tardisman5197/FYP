@@ -66,6 +66,7 @@ func (s *Simulation) runOneStep() {
 	var toRemove []int
 
 	s.currentTick++
+	s.Logger.Infof("Current Tick: %v", s.currentTick)
 
 	// Loop over each agent and execute act function
 	for i := 0; i < len(s.agents); i++ {
