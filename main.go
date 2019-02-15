@@ -2,8 +2,10 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"./simulation"
+	"./view"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,7 +29,20 @@ func main() {
 	logger := log.WithFields(log.Fields{"package": "main"})
 	logger.Info("Server Starting")
 
-	demo()
+	// demo()
+	u := view.NewUnityServer(":6666")
+	u.StartServer()
+	for {
+		if u.Connected() {
+			logger.Debug("Sending Message")
+			u.SendMessage("Hello World")
+			time.Sleep(3 * time.Second)
+			logger.Debug("Stopping unity server")
+			u.StopServer()
+			break
+		}
+	}
+
 	// // Create a controler and start listening
 	// c := controller.NewController(serverAddr)
 	// c.Listen()
