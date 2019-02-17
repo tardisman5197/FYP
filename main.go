@@ -4,8 +4,10 @@ import (
 	"os"
 	"time"
 
+	"./controller"
 	"./simulation"
 	"./view"
+	"github.com/g3n/engine/util/logger"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -29,29 +31,16 @@ func main() {
 	logger := log.WithFields(log.Fields{"package": "main"})
 	logger.Info("Server Starting")
 
-	// demo()
-	u := view.NewUnityServer(":6666")
-	u.StartServer()
-	for {
-		if u.Connected() {
-			logger.Debug("Sending Message")
-			u.SendMessage("Hello World")
-			time.Sleep(3 * time.Second)
-			logger.Debug("Stopping unity server")
-			u.StopServer()
-			break
-		}
-	}
-
-	// // Create a controler and start listening
-	// c := controller.NewController(serverAddr)
-	// c.Listen()
+	// demoModel()
+	demoUnity()
+	// demoServer()
 
 	// Once the http server is no longer listening the server stops
 	logger.Warn("Server Stopping")
 }
 
-func demo() {
+// demoModel test the traffic model
+func demoModel() {
 	// Create the environment
 	env := simulation.NewEnvironment()
 	env.WriteShapeFile("resources/test.shp")
@@ -99,4 +88,30 @@ func demo() {
 	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
 
 	sim.RunSteps(100)
+}
+
+// demoUnity test unity server
+func demoUnity() {
+	u := view.NewUnityServer(":6666")
+	u.StartServer()
+	for {
+		if u.Connected() {
+			logger.Debug("Sending Message")
+			u.SendMessage("Hello World")
+			time.Sleep(5 * time.Second)
+			u.SendMessage("Hello World")
+			time.Sleep(5 * time.Second)
+			u.SendMessage("Hello World")
+			time.Sleep(5 * time.Second)
+			logger.Debug("Stopping unity server")
+			u.StopServer()
+			break
+		}
+	}
+}
+
+func demoServer() {
+	// Create a controler and start listening
+	c := controller.NewController(serverAddr)
+	c.Listen()
 }

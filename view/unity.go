@@ -37,18 +37,20 @@ func NewUnityServer(port string) UnityServer {
 	return u
 }
 
-// StartServer ...
-func (u *UnityServer) StartServer() {
+// StartServer creats a TCP server which listens for new connections
+func (u *UnityServer) StartServer() error {
 	u.Logger.Info("Starting Unity server")
 	u.Logger.Infof("Port: '%v'", u.port)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", u.port)
 	if err != nil {
-		panic(err)
+		u.Logger.Error("Error: Unable to resolve TCP addr")
+		return err
 	}
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
-		panic(err)
+		u.Logger.Error("Error: Unable to listen on tcp addr")
+		return err
 	}
 	for {
 		u.conn, err = listener.Accept()
@@ -62,53 +64,74 @@ func (u *UnityServer) StartServer() {
 			break
 		}
 	}
+	return nil
 }
 
-// handelClient ...
+// handelClient checks for messages to be sent or received
 func (u *UnityServer) handleClient() {
+	// Disconnect from the server after the loop has been broken out of
 	defer u.disconnect()
+
+	// Constantly check for messages from unity
+	go u.readMessage()
 
 handlerLoop:
 	for {
 		select {
+		// Check if the server should stop
 		case stop := <-u.stop:
-			u.Logger.Infof("Stop Flag Unity server %v", stop)
 			if stop {
-				u.Logger.Info("Stopping Unity server")
 				break handlerLoop
 			}
+		// Check if their are any messages to send
 		case msg := <-u.outgoing:
-			u.Logger.Debugf("Sending: %v", msg)
 			_, err := u.conn.Write([]byte(msg))
 			if err != nil {
-				panic(err)
+				u.Logger.Error("Error: sending message")
 			}
 			u.Logger.Debugf("Messsage sent: %v", msg)
+		// Check if their are any incoming messages
+		case msg := <-u.incoming:
+			u.Logger.Infof("Recieved: %v", msg)
 		}
 	}
 }
 
-// SendMessage ...
+// SendMessage adds a message to be sent to the unbity application.
 func (u *UnityServer) SendMessage(msg string) {
 	u.Logger.Debugf("Adding to outgoing: %v", msg)
 	u.outgoing <- msg
 }
 
-// StopServer ...
+// readMessage checks for messages from the unity application.
+func (u *UnityServer) readMessage() {
+	for {
+		data := make([]byte, 1024)
+		n, err := u.conn.Read(data)
+		if err != nil {
+			u.stop <- true
+			break
+		}
+		u.incoming <- string(data[:n])
+	}
+}
+
+// StopServer closes the communication between the server and unity
+// application.
 func (u *UnityServer) StopServer() {
-	u.Logger.Debugf("Setting stop flag to: %v", true)
 	u.stop <- true
 }
 
-// Connected ...
+// Connected returns the state of the server. If connected is true
+// the server is connected to the unity application.
 func (u *UnityServer) Connected() bool {
 	return u.connected
 }
 
-// disconnect ...
+// disconnect cloeses the communication between the server and unity
+// application and updates the connected value.
 func (u *UnityServer) disconnect() {
 	u.Logger.Info("Disconnecting unity")
 	u.conn.Close()
 	u.connected = false
-	u.Logger.Info("Connection Closed")
 }
