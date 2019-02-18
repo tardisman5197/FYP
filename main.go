@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"time"
 
 	"./controller"
 	"./simulation"
@@ -97,12 +96,9 @@ func demoUnity() {
 	for {
 		if u.Connected() {
 			logger.Debug("Sending Message")
-			u.SendMessage("Hello World")
-			time.Sleep(5 * time.Second)
-			u.SendMessage("Hello World")
-			time.Sleep(5 * time.Second)
-			u.SendMessage("Hello World")
-			time.Sleep(5 * time.Second)
+			agents := [][]float64{{0.1, 0.0}, {10.0, 10.0}}
+			waypoints := [][]float64{{0.2, 0.0}, {20.0, 20.0}}
+			u.SendSimulation(agents, waypoints, 1)
 			logger.Debug("Stopping unity server")
 			u.StopServer()
 			break
@@ -110,6 +106,7 @@ func demoUnity() {
 	}
 }
 
+// demoServer tests the API
 func demoServer() {
 	// Create a controler and start listening
 	c := controller.NewController(serverAddr)
