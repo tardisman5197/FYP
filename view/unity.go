@@ -3,6 +3,7 @@ package view
 import (
 	"encoding/json"
 	"net"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -17,6 +18,14 @@ type message struct {
 	// Tick stores the tick of the simulation which the
 	// information represents
 	Tick int `json:"tick"`
+}
+
+// receipt is a struct that stores the information that the unity
+// application sends.
+type receipt struct {
+	// Filepath stores the path to the image that represents a tick
+	// in the simulation
+	Filepath string `json:"filepath"`
 }
 
 // vector2 struct is used to convert x,y valeus into a json map format.
@@ -108,14 +117,10 @@ handlerLoop:
 			}
 		// Check if their are any messages to send
 		case msg := <-u.outgoing:
-			_, err := u.conn.Write([]byte(msg))
-			if err != nil {
-				u.Logger.Error("Error: sending message")
-			}
-			u.Logger.Debugf("Messsage sent: %v", msg)
+			u.writeToSocket(msg)
 		// Check if their are any incoming messages
 		case msg := <-u.incoming:
-			u.Logger.Infof("Recieved: %v", msg)
+			u.parseMessage(msg)
 		}
 	}
 }
@@ -155,16 +160,49 @@ func (u *UnityServer) SendSimulation(agents, waypoints [][]float64, tick int) {
 	u.SendMessage(string(jsonStr))
 }
 
+// writeToSocket writes a messaage to the socket file for the unity
+// application to read.
+func (u *UnityServer) writeToSocket(msg string) {
+	// Write tries to write the message to the file
+	// if an EOF error is found the connection has been closed
+	_, err := u.conn.Write([]byte(msg))
+	if err != nil {
+		u.Logger.Error("Error: sending message")
+		return
+	}
+	u.Logger.Debugf("Messsage sent: %v", msg)
+}
+
 // readMessage checks for messages from the unity application.
 func (u *UnityServer) readMessage() {
 	for {
 		data := make([]byte, 1024)
 		n, err := u.conn.Read(data)
 		if err != nil {
+			u.Logger.Errorf("Error: Reading socket - %v", err)
 			u.stop <- true
 			break
 		}
 		u.incoming <- string(data[:n])
+	}
+}
+
+// parseMessage reads in messages sent from the unity application.
+func (u *UnityServer) parseMessage(msg string) {
+	u.Logger.Infof("Recieved: %v", msg)
+
+	// Convert json to struct
+	var r receipt
+	err := json.Unmarshal([]byte(msg), &r)
+	if err != nil {
+		u.Logger.Errorf("Error: Trying to parse message - %v", err)
+		return
+	}
+
+	// Check if the image exists
+	if _, err := os.Stat(r.Filepath); err == nil {
+		u.Logger.Debug("File does exist")
+
 	}
 }
 
@@ -174,16 +212,16 @@ func (u *UnityServer) StopServer() {
 	u.stop <- true
 }
 
-// Connected returns the state of the server. If connected is true
-// the server is connected to the unity application.
-func (u *UnityServer) Connected() bool {
-	return u.connected
-}
-
 // disconnect cloeses the communication between the server and unity
 // application and updates the connected value.
 func (u *UnityServer) disconnect() {
 	u.Logger.Info("Disconnecting unity")
 	u.conn.Close()
 	u.connected = false
+}
+
+// Connected returns the state of the server. If connected is true
+// the server is connected to the unity application.
+func (u *UnityServer) Connected() bool {
+	return u.connected
 }

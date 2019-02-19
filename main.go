@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"./controller"
 	"./simulation"
@@ -99,10 +100,18 @@ func demoUnity() {
 			agents := [][]float64{{0.1, 0.0}, {10.0, 10.0}}
 			waypoints := [][]float64{{0.2, 0.0}, {20.0, 20.0}}
 			u.SendSimulation(agents, waypoints, 1)
-			logger.Debug("Stopping unity server")
-			u.StopServer()
+
+			time.Sleep(5 * time.Second)
+
+			agents = [][]float64{{1.1, 1.0}, {10.0, 10.0}}
+			waypoints = [][]float64{{0.2, 0.0}, {20.0, 20.0}}
+			u.SendSimulation(agents, waypoints, 2)
+			// logger.Debug("Stopping unity server")
+			// u.StopServer()
 			break
 		}
+	}
+	for {
 	}
 }
 
