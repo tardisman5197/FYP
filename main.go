@@ -2,8 +2,12 @@ package main
 
 import (
 	"os"
+	"time"
 
+	"./controller"
 	"./simulation"
+	"./view"
+	"github.com/g3n/engine/util/logger"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,16 +31,16 @@ func main() {
 	logger := log.WithFields(log.Fields{"package": "main"})
 	logger.Info("Server Starting")
 
-	demo()
-	// // Create a controler and start listening
-	// c := controller.NewController(serverAddr)
-	// c.Listen()
+	// demoModel()
+	// demoUnity()
+	demoServer()
 
 	// Once the http server is no longer listening the server stops
 	logger.Warn("Server Stopping")
 }
 
-func demo() {
+// demoModel test the traffic model
+func demoModel() {
 	// Create the environment
 	env := simulation.NewEnvironment()
 	env.WriteShapeFile("resources/test.shp")
@@ -84,4 +88,39 @@ func demo() {
 	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
 
 	sim.RunSteps(100)
+}
+
+// demoUnity test unity server
+func demoUnity() {
+	u := view.NewUnityServer(":6666")
+	u.StartServer()
+	for {
+		if u.Connected() {
+			logger.Debug("Sending Message")
+			agents := [][]float64{{0.1, 0.0}, {10.0, 10.0}}
+			waypoints := [][]float64{{0.2, 0.0}, {20.0, 20.0}}
+			u.SendSimulation(agents, waypoints, 1)
+
+			time.Sleep(5 * time.Second)
+
+			agents = [][]float64{{1.1, 1.0}, {10.0, 10.0}}
+			waypoints = [][]float64{{0.2, 0.0}, {20.0, 20.0}}
+			u.SendSimulation(agents, waypoints, 2)
+			// logger.Debug("Stopping unity server")
+			// u.StopServer()
+			break
+		}
+	}
+	for {
+	}
+}
+
+// demoServer tests the API
+func demoServer() {
+	// Create a controler and start listening
+	c, err := controller.NewController(serverAddr, unityAddr)
+	if err != nil {
+		panic(err)
+	}
+	c.Listen()
 }
