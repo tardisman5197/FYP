@@ -32,8 +32,8 @@ func main() {
 	logger.Info("Server Starting")
 
 	// demoModel()
-	demoUnity()
-	// demoServer()
+	// demoUnity()
+	demoServer()
 
 	// Once the http server is no longer listening the server stops
 	logger.Warn("Server Stopping")
@@ -118,6 +118,9 @@ func demoUnity() {
 // demoServer tests the API
 func demoServer() {
 	// Create a controler and start listening
-	c := controller.NewController(serverAddr)
+	c, err := controller.NewController(serverAddr, unityAddr)
+	if err != nil {
+		panic(err)
+	}
 	c.Listen()
 }
