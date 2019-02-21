@@ -8,9 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// The proabability that a vehicle might deccelerate
-const decelerationProbability = 0.5
-
 // Vehicle implements the agent interface.
 // The agent represents a simple vehicle.
 type Vehicle struct {

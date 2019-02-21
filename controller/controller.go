@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
 	"../simulation"
@@ -19,7 +21,7 @@ type Controller struct {
 	server *http.Server
 	// simulations stores a slice of simulations that are created
 	// on request by a user
-	simulations []simulation.Simulation
+	simulations sync.Map
 	// unityViewer is a server that handles the connection to unity
 	// and is responsable for visualising the simulation
 	unityViewer view.UnityServer
@@ -56,6 +58,7 @@ func (c *Controller) setup(port string) {
 
 	// Assign endpoints
 	router.HandleFunc("/test", c.test).Methods("GET")
+	router.HandleFunc("/newSimulation", c.newSimulation).Methods("GET")
 	router.HandleFunc("/shutdown", c.Shutdown).Methods("GET")
 
 	// Setup the http server
@@ -100,5 +103,42 @@ func (c *Controller) Shutdown(w http.ResponseWriter, r *http.Request) {
 
 	// Stop the server from listening
 	c.server.Shutdown(context.Background())
+
+}
+
+// newSimulation creates and adds a simulation to the controller.
+func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
+	// 97-122
+	var key string
+	for {
+		// Generate a random string key
+		key = ""
+		for i := 0; i < keyLength; i++ {
+			key += string(rand.Intn(26) + 97)
+			c.Logger.Debugf("Key: %v", key)
+		}
+
+		// Check of key is already in use
+		if _, ok := c.simulations.Load(key); !ok {
+			break
+		}
+	}
+
+	// Generate the simulation environment
+	env := simulation.NewEnvironment()
+	env.WriteShapeFile("resources/test.shp")
+	env.ReadShapefile("resources/test.shp")
+
+	// Create the simulation
+	sim := simulation.NewSimulation(env)
+
+	// Add the simulation to the map
+	c.simulations.Store(key, sim)
+
+	val, _ := c.simulations.Load(key)
+	c.Logger.Debugf("Simulations: %v - %v", key, val)
+
+	jsonStr := "key: " + key
+	fmt.Fprint(w, jsonStr)
 
 }

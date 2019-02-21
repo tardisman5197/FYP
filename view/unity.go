@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"os/exec"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -69,6 +70,16 @@ func NewUnityServer(port string) UnityServer {
 	return u
 }
 
+// startUnityApp runs the unity application executable.
+func (u *UnityServer) startUnityApp() {
+	if pathToUnity != "" {
+		cmd := exec.Command(pathToUnity)
+		cmd.Run()
+	} else {
+		u.Logger.Warn("Path to unity not set")
+	}
+}
+
 // StartServer creats a TCP server which listens for new connections
 func (u *UnityServer) StartServer() error {
 	u.Logger.Info("Starting Unity server")
@@ -84,7 +95,16 @@ func (u *UnityServer) StartServer() error {
 		u.Logger.Error("Error: Unable to listen on tcp addr")
 		return err
 	}
+
+	startedUnity := false
+
 	for {
+		if !startedUnity {
+			u.Logger.Info("Starting Unity App")
+			go u.startUnityApp()
+			startedUnity = true
+		}
+
 		u.conn, err = listener.Accept()
 		if err != nil {
 			continue

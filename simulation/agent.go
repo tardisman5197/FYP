@@ -1,7 +1,5 @@
 package simulation
 
-const margin = 1.0
-
 // Agent is an interface that models any actors that may apear in
 // the simulation
 type Agent interface {
