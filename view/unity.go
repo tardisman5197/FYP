@@ -52,6 +52,8 @@ type UnityServer struct {
 	// stop can be set to true of the TCP server needs to be stopped
 	stop chan bool
 
+	unityApp *exec.Cmd
+
 	// Logger is used to give a context based log to the stdout
 	Logger *log.Entry
 }
@@ -73,8 +75,8 @@ func NewUnityServer(port string) UnityServer {
 // startUnityApp runs the unity application executable.
 func (u *UnityServer) startUnityApp() {
 	if pathToUnity != "" {
-		cmd := exec.Command(pathToUnity)
-		cmd.Run()
+		u.unityApp = exec.Command(pathToUnity)
+		u.unityApp.Run()
 	} else {
 		u.Logger.Warn("Path to unity not set")
 	}
@@ -96,7 +98,7 @@ func (u *UnityServer) StartServer() error {
 		return err
 	}
 
-	startedUnity := false
+	startedUnity := !startUnity
 
 	for {
 		if !startedUnity {
