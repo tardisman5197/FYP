@@ -51,7 +51,10 @@ type UnityServer struct {
 	outgoing chan string
 	// stop can be set to true of the TCP server needs to be stopped
 	stop chan bool
+	// currentFilePath stores the current image filepath
+	currentFilePath chan string
 
+	// unityApp stores the command line command that runs the unity application
 	unityApp *exec.Cmd
 
 	// Logger is used to give a context based log to the stdout
@@ -69,6 +72,7 @@ func NewUnityServer(port string) UnityServer {
 	u.incoming = make(chan string)
 	u.outgoing = make(chan string)
 	u.stop = make(chan bool)
+	u.currentFilePath = make(chan string)
 	return u
 }
 
@@ -224,8 +228,10 @@ func (u *UnityServer) parseMessage(msg string) {
 	// Check if the image exists
 	if _, err := os.Stat(r.Filepath); err == nil {
 		u.Logger.Debug("File does exist")
-
 	}
+	u.Logger.Debugf("Setting currentFilepath: %v", r.Filepath)
+	u.currentFilePath <- r.Filepath
+
 }
 
 // StopServer closes the communication between the server and unity
@@ -246,4 +252,13 @@ func (u *UnityServer) disconnect() {
 // the server is connected to the unity application.
 func (u *UnityServer) Connected() bool {
 	return u.connected
+}
+
+// GetImageFilepath sends the simulation to the unity application then
+// waits for a response. The filepath to the image gererated is returned.
+func (u *UnityServer) GetImageFilepath(agents, waypoints [][]float64, tick int) string {
+	u.SendSimulation(agents, waypoints, tick)
+	filepath := <-u.currentFilePath
+	u.Logger.Debugf("Filepath got - GetImage: %v", filepath)
+	return filepath
 }
