@@ -1,15 +1,13 @@
 package simulation
 
 import (
+	"encoding/json"
 	"math"
 	"math/rand"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
-
-// The proabability that a vehicle might deccelerate
-const decelerationProbability = 0.5
 
 // Vehicle implements the agent interface.
 // The agent represents a simple vehicle.
@@ -97,9 +95,65 @@ func (v Vehicle) GetID() int {
 	return v.id
 }
 
-// GetCurrentWaypoint retrives the vehicle's current target waypoint
+// GetCurrentWaypoint retrives the vehicle's current target waypoint.
 func (v Vehicle) GetCurrentWaypoint() Vector {
 	return v.currentWaypoint
+}
+
+// GetSpeed returns the current speed of the vehicle.
+func (v Vehicle) GetSpeed() float64 {
+	return v.speed
+}
+
+// GetRoute returns the current route of the vehicle.
+func (v Vehicle) GetRoute() []Vector {
+	return v.route
+}
+
+// GetType returns the name of the type of agent, in this case "vehicle"
+func (v Vehicle) GetType() string {
+	return "vehicle"
+}
+
+// GetInfo retuns information about the vehicle in a json string.
+func (v Vehicle) GetInfo() string {
+	type vehicleInfo struct {
+		ID              int         `json:"id"`
+		Position        []float64   `json:"position"`
+		Speed           float64     `json:"speed"`
+		CurrentWaypoint []float64   `json:"currentWaypoint"`
+		Route           [][]float64 `json:"route"`
+		Type            string      `json:"type"`
+	}
+
+	type response struct {
+		Success bool        `json:"success"`
+		Error   string      `json:"error"`
+		Info    vehicleInfo `json:"info"`
+	}
+
+	p := v.GetPosition()
+	cwp := v.GetCurrentWaypoint()
+	// Convert []Vector to [][]float64
+	var r [][]float64
+	for _, wp := range v.GetRoute() {
+		r = append(r, wp.ConvertToSlice())
+	}
+
+	vInfo := vehicleInfo{
+		ID:              v.GetID(),
+		Position:        p.ConvertToSlice(),
+		Speed:           v.GetSpeed(),
+		CurrentWaypoint: cwp.ConvertToSlice(),
+		Route:           r,
+		Type:            v.GetType()}
+
+	// Convert the infomation into a json string
+	var resp response
+	resp.Success = true
+	resp.Info = vInfo
+	jsonStr, _ := json.Marshal(resp)
+	return string(jsonStr)
 }
 
 // updateVelocity calculates the vehicles next velocity based upon

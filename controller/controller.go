@@ -1,13 +1,10 @@
 package controller
 
 import (
-	"context"
-	"fmt"
-	"html"
 	"net/http"
+	"sync"
 	"time"
 
-	"../simulation"
 	"../view"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -19,7 +16,7 @@ type Controller struct {
 	server *http.Server
 	// simulations stores a slice of simulations that are created
 	// on request by a user
-	simulations []simulation.Simulation
+	simulations sync.Map
 	// unityViewer is a server that handles the connection to unity
 	// and is responsable for visualising the simulation
 	unityViewer view.UnityServer
@@ -56,6 +53,17 @@ func (c *Controller) setup(port string) {
 
 	// Assign endpoints
 	router.HandleFunc("/test", c.test).Methods("GET")
+
+	// simulation endpoints
+	router.HandleFunc("/simulation/new", c.newSimulation).Methods("POST")
+	router.HandleFunc("/simulation/run/{id}", c.runSimulation).Methods("POST")
+	router.HandleFunc("/simulation/stop/{id}", c.stopSimulation).Methods("GET")
+	router.HandleFunc("/simulation/add/{id}", c.addAgent).Methods("POST")
+	router.HandleFunc("/simulation/info/agent/{id}/{agentId}", c.getAgentInfo).Methods("GET")
+	router.HandleFunc("/simulation/info/{id}", c.getInfo).Methods("GET")
+	router.HandleFunc("/simulation/view/{id}", c.getImage).Methods("GET")
+
+	// server endpoints
 	router.HandleFunc("/shutdown", c.Shutdown).Methods("GET")
 
 	// Setup the http server
@@ -76,29 +84,4 @@ func (c *Controller) Listen() {
 
 	c.Logger.Info("Server is Listening ...")
 	c.server.ListenAndServe()
-}
-
-// test responds to the request with a simple message
-func (c *Controller) test(w http.ResponseWriter, r *http.Request) {
-	c.Logger.Debug("Received: " + html.EscapeString(r.URL.Path))
-
-	fmt.Fprintf(w, "Everything is working, %q", html.EscapeString(r.URL.Path))
-}
-
-// Shutdown gracefully stops the http and unity server.
-func (c *Controller) Shutdown(w http.ResponseWriter, r *http.Request) {
-	c.Logger.Debug("Received: " + html.EscapeString(r.URL.Path))
-
-	// Check server has been setup
-	if c.server == nil {
-		c.Logger.Fatal("Server has not been setup")
-		return
-	}
-
-	// Close the unity server connection
-	c.unityViewer.StopServer()
-
-	// Stop the server from listening
-	c.server.Shutdown(context.Background())
-
 }
