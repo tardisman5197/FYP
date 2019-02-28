@@ -61,7 +61,7 @@ func demoModel() {
 	maxSpeed := 8.0
 	acc := 3.0
 	dec := 3.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
 
 	sim.RunSteps(5)
 
@@ -69,7 +69,7 @@ func demoModel() {
 	maxSpeed = 10.0
 	acc = 3.0
 	dec = 3.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
 
 	sim.RunSteps(5)
 
@@ -77,7 +77,7 @@ func demoModel() {
 	maxSpeed = 10.0
 	acc = 4.0
 	dec = 4.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
 
 	sim.RunSteps(5)
 
@@ -85,7 +85,7 @@ func demoModel() {
 	maxSpeed = 80.0
 	acc = 5.0
 	dec = 5.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route))
+	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
 
 	sim.RunSteps(100)
 }

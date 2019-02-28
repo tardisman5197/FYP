@@ -22,7 +22,8 @@ type Vehicle struct {
 	// route stores a list of waypoints the vehicle must visit to
 	// reach its final destination.
 	route []Vector
-	// currentWaypoint stores the position of the vehicles current destination.
+	// currentWaypoint stores the position of the
+	// vehicles current destination.
 	currentWaypoint Vector
 	// acceleration stores the rate at which the
 	// vehicle can increase its speed.
@@ -30,6 +31,9 @@ type Vehicle struct {
 	// deceleration stores the rate at which the
 	// vehicle can decrease its speed.
 	deceleration float64
+	// frequency is how often the vehicle spawns in the
+	// simulation.
+	frequency int
 
 	// Logger is used to give a context based log to the stdout
 	Logger *log.Entry
@@ -44,7 +48,8 @@ func NewVehicle(
 	maxSpeed float64,
 	acceleration float64,
 	deceleration float64,
-	route []Vector) Vehicle {
+	route []Vector,
+	freq int) Vehicle {
 
 	rand.Seed(time.Now().Unix())
 	// Init values
@@ -63,6 +68,7 @@ func NewVehicle(
 	v.acceleration = acceleration
 	v.deceleration = deceleration
 	v.route = route
+	v.frequency = freq
 	// Get the first waypoint
 	v.getNextWaypoint()
 
@@ -154,6 +160,29 @@ func (v Vehicle) GetInfo() string {
 	resp.Info = vInfo
 	jsonStr, _ := json.Marshal(resp)
 	return string(jsonStr)
+}
+
+// GetFrequency returns how often the vehicle is spawned
+// in the simulation.
+func (v Vehicle) GetFrequency() int {
+	return v.frequency
+}
+
+// SetID changes the value of the vehicle's id.
+func (v Vehicle) SetID(newID int) Agent {
+	v.id = newID
+	// Update Logger to display new ID
+	v.Logger = log.WithFields(log.Fields{
+		"package": "simulation",
+		"section": "vehicle",
+		"id":      v.id})
+	return v
+}
+
+// SetFrequency changes the vehicle's frequency.
+func (v Vehicle) SetFrequency(freq int) Agent {
+	v.frequency = freq
+	return v
 }
 
 // updateVelocity calculates the vehicles next velocity based upon

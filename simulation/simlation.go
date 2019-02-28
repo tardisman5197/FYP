@@ -9,11 +9,26 @@ import (
 
 // Simulation stores all the details of a traffic simulation.
 type Simulation struct {
-	shouldStop  bool
-	agents      []Agent
+	// shouldStop is true if the simualtion should
+	// stop and no longer run the simulation
+	shouldStop bool
+	// agents is a list of all the agents in the
+	// simulation
+	agents []Agent
+	// environment stores the information about
+	// the road network
 	environment Environment
+	// currentTick is the time that the simulation
+	// is currently at
 	currentTick int
+	// agentsToSpawn is a list of Agents (key) that need to
+	// be spawned thorughout the simualtion.
+	agentsToSpawn []Agent
+	// currentAgentID stores the current ID for an agent.
+	// This is used to assing new agents IDs.
+	currentAgentID int
 
+	// Logger is used to print messages to the stdout
 	Logger *log.Entry
 }
 
@@ -70,6 +85,17 @@ func (s *Simulation) runOneStep() {
 	s.currentTick++
 	s.Logger.Infof("Current Tick: %v", s.currentTick)
 
+	// Spawn agents that have a frequency
+	for _, agent := range s.agentsToSpawn {
+		if s.currentTick%agent.GetFrequency() == 0 {
+			s.Logger.Debugf("Spawning Agent, f: %v, tick: %v", agent.GetFrequency(), s.currentTick)
+
+			// Add the new vehicle, however change the frequency
+			// so the new agent doesn't get added to the agentsToSpawn.
+			s.AddAgent(agent.SetFrequency(0))
+		}
+	}
+
 	// Loop over each agent and execute act function
 	for i := 0; i < len(s.agents); i++ {
 		removeAgent := false
@@ -97,7 +123,21 @@ func (s *Simulation) Stop() {
 
 // AddAgent adds an agent to the simulation.
 func (s *Simulation) AddAgent(newAgent Agent) {
-	s.Logger.Info("Adding an Agent")
+
+	// if the frequency is more than 0 the agent
+	// needs to be spawned more than once
+	if newAgent.GetFrequency() > 0 {
+		s.agentsToSpawn = append(s.agentsToSpawn, newAgent)
+	}
+
+	// Give the agent a unique id
+	if newAgent.GetID() < 0 {
+		s.currentAgentID++
+		s.Logger.Debugf("Assinging ID: %v", s.currentAgentID)
+		newAgent = newAgent.SetID(s.currentAgentID)
+	}
+
+	s.Logger.Infof("Adding an Agent: %v", newAgent.GetID())
 	s.agents = append(s.agents, newAgent)
 }
 
@@ -215,6 +255,7 @@ func (s *Simulation) GetWaypoints() (waypoints [][]float64) {
 func (s *Simulation) GetTick() int {
 	return s.currentTick
 }
+
 func (s *Simulation) getImage() {
 	var wp [][]float64
 	for _, cwp := range s.environment.waypoints {
