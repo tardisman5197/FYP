@@ -240,7 +240,6 @@ func (c *Controller) stopSimulation(w http.ResponseWriter, r *http.Request) {
 // addAgent adds agents to a specified simulation.
 func (c *Controller) addAgent(w http.ResponseWriter, r *http.Request) {
 	type agentInfo struct {
-		ID            int         `json:"id"`
 		StartLocation []float64   `json:"startLocation"`
 		StartSpeed    float64     `json:"startSpeed"`
 		MaxSpeed      float64     `json:"maxSpeed"`
@@ -248,6 +247,7 @@ func (c *Controller) addAgent(w http.ResponseWriter, r *http.Request) {
 		Deceleration  float64     `json:"deceleration"`
 		Route         [][]float64 `json:"route"`
 		Type          string      `json:"type"`
+		Frequency     int         `json:"frequency"`
 	}
 
 	type info struct {
@@ -308,13 +308,14 @@ func (c *Controller) addAgent(w http.ResponseWriter, r *http.Request) {
 
 			// Create a vehicle
 			newAgent := simulation.NewVehicle(
-				agent.ID,
+				-1,
 				startLoc,
 				agent.StartSpeed,
 				agent.MaxSpeed,
 				agent.Acceleration,
 				agent.Deceleration,
-				route)
+				route,
+				agent.Frequency)
 
 			sim.AddAgent(newAgent)
 
@@ -434,9 +435,11 @@ func (c *Controller) getAgentInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Load the simulation from the map
 	i, _ := c.simulations.Load(id)
 	sim := i.(simulation.Simulation)
 
+	// Get the agent from the simulation
 	agent := sim.GetAgent(agentID)
 	if agent == nil {
 		// No Simulation found send error
@@ -455,6 +458,7 @@ func (c *Controller) getAgentInfo(w http.ResponseWriter, r *http.Request) {
 
 	jsonStr := agent.GetInfo()
 
+	// Send the information to the client
 	fmt.Fprint(w, string(jsonStr))
 
 	c.Logger.Infof("Info returned for sim: %v", id)
@@ -507,13 +511,16 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 		sim.GetWaypoints(),
 		sim.GetTick())
 
-	// Open file and store the base64 encoding of it in the response
-	f, _ := os.Open(resp.Filepath)
-	// Read entire JPG into byte slice.
-	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
-	// Encode as base64.
-	resp.Image = base64.StdEncoding.EncodeToString(content)
+	if sendBase64Encoding {
+		// Open file and store the base64 encoding of it in the response
+		f, _ := os.Open(resp.Filepath)
+		defer f.Close()
+		// Read entire JPG into byte slice.
+		reader := bufio.NewReader(f)
+		content, _ := ioutil.ReadAll(reader)
+		// Encode as base64.
+		resp.Image = base64.StdEncoding.EncodeToString(content)
+	}
 
 	resp.Success = true
 
