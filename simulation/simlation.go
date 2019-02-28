@@ -24,6 +24,9 @@ type Simulation struct {
 	// agentsToSpawn is a list of Agents (key) that need to
 	// be spawned thorughout the simualtion.
 	agentsToSpawn []Agent
+	// currentAgentID stores the current ID for an agent.
+	// This is used to assing new agents IDs.
+	currentAgentID int
 
 	// Logger is used to print messages to the stdout
 	Logger *log.Entry
@@ -129,9 +132,9 @@ func (s *Simulation) AddAgent(newAgent Agent) {
 
 	// Give the agent a unique id
 	if newAgent.GetID() < 0 {
-		s.Logger.Debugf("Assinging ID: %v", len(s.agents))
-		newAgent = newAgent.SetID(len(s.agents))
-		s.Logger.Debugf("ID: %v", newAgent.GetID())
+		s.currentAgentID++
+		s.Logger.Debugf("Assinging ID: %v", s.currentAgentID)
+		newAgent = newAgent.SetID(s.currentAgentID)
 	}
 
 	s.Logger.Infof("Adding an Agent: %v", newAgent.GetID())
