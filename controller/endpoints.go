@@ -505,10 +505,13 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 	i, _ := c.simulations.Load(id)
 	sim := i.(simulation.Simulation)
 
+	positions, goals := sim.GetAgentPositions()
+
 	// Get the filepath for image
 	resp.Filepath = c.unityViewer.GetImageFilepath(
-		sim.GetAgentPositions(),
+		positions,
 		sim.GetWaypoints(),
+		goals,
 		sim.GetTick())
 
 	if sendBase64Encoding {

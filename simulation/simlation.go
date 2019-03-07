@@ -230,13 +230,16 @@ func (s *Simulation) GetAgent(id int) Agent {
 }
 
 // GetAgentPositions retuns the positions of all the agents in the simulation.
-func (s *Simulation) GetAgentPositions() (positions [][]float64) {
+// It also retuns the current waypoint for each agent.
+func (s *Simulation) GetAgentPositions() (positions [][]float64, goals [][]float64) {
 
 	// Loop through all the agents and get their positions in a []float64
 	// format and append them to the results
 	for _, agent := range s.agents {
 		p := agent.GetPosition()
 		positions = append(positions, p.ConvertToSlice())
+		wp := agent.GetCurrentWaypoint()
+		goals = append(goals, wp.ConvertToSlice())
 	}
 
 	return
@@ -254,6 +257,11 @@ func (s *Simulation) GetWaypoints() (waypoints [][]float64) {
 // GetTick retuns the current tick the simulation is on.
 func (s *Simulation) GetTick() int {
 	return s.currentTick
+}
+
+// GetAgents retuns the list of agents in the simulation.
+func (s *Simulation) GetAgents() []Agent {
+	return s.agents
 }
 
 func (s *Simulation) getImage() {

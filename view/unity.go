@@ -16,6 +16,9 @@ type message struct {
 	Agents []vector2 `json:"agents"`
 	// Waypoints stores the x,y coordinates of the waypoints
 	Waypoints []vector2 `json:"waypoints"`
+	// Goals stores the x,y coordinates of each agent's current
+	// waypoint
+	Goals []vector2 `json:"goals"`
 	// Tick stores the tick of the simulation which the
 	// information represents
 	Tick int `json:"tick"`
@@ -158,7 +161,7 @@ func (u *UnityServer) SendMessage(msg string) {
 }
 
 // SendSimulation creates a json string and sends it to the unity application.
-func (u *UnityServer) SendSimulation(agents, waypoints [][]float64, tick int) {
+func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick int) {
 	// Convert agents [][]float64 into []vector2
 	var agentVec []vector2
 	for i := 0; i < len(agents); i++ {
@@ -171,10 +174,16 @@ func (u *UnityServer) SendSimulation(agents, waypoints [][]float64, tick int) {
 		waypointVec = append(waypointVec, vector2{X: waypoints[i][0], Y: waypoints[i][1]})
 	}
 
+	var goalsVec []vector2
+	for i := 0; i < len(goals); i++ {
+		goalsVec = append(goalsVec, vector2{X: goals[i][0], Y: goals[i][1]})
+	}
+
 	// convert message to json string
 	jsonStr, err := json.Marshal(message{
 		Agents:    agentVec,
 		Waypoints: waypointVec,
+		Goals:     goalsVec,
 		Tick:      tick,
 	})
 	if err != nil {
@@ -202,7 +211,7 @@ func (u *UnityServer) writeToSocket(msg string) {
 // readMessage checks for messages from the unity application.
 func (u *UnityServer) readMessage() {
 	for {
-		data := make([]byte, 1024)
+		data := make([]byte, 8192)
 		n, err := u.conn.Read(data)
 		if err != nil {
 			u.Logger.Errorf("Error: Reading socket - %v", err)
@@ -256,8 +265,8 @@ func (u *UnityServer) Connected() bool {
 
 // GetImageFilepath sends the simulation to the unity application then
 // waits for a response. The filepath to the image gererated is returned.
-func (u *UnityServer) GetImageFilepath(agents, waypoints [][]float64, tick int) string {
-	u.SendSimulation(agents, waypoints, tick)
+func (u *UnityServer) GetImageFilepath(agents, waypoints, goals [][]float64, tick int) string {
+	u.SendSimulation(agents, waypoints, goals, tick)
 	filepath := <-u.currentFilePath
 	u.Logger.Debugf("Filepath got - GetImage: %v", filepath)
 	return filepath

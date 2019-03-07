@@ -2,12 +2,9 @@ package main
 
 import (
 	"os"
-	"time"
 
 	"./controller"
 	"./simulation"
-	"./view"
-	"github.com/g3n/engine/util/logger"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -92,27 +89,27 @@ func demoModel() {
 
 // demoUnity test unity server
 func demoUnity() {
-	u := view.NewUnityServer(":6666")
-	u.StartServer()
-	for {
-		if u.Connected() {
-			logger.Debug("Sending Message")
-			agents := [][]float64{{0.1, 0.0}, {10.0, 10.0}}
-			waypoints := [][]float64{{0.2, 0.0}, {20.0, 20.0}}
-			u.SendSimulation(agents, waypoints, 1)
+	// u := view.NewUnityServer(":6666")
+	// u.StartServer()
+	// for {
+	// 	if u.Connected() {
+	// 		logger.Debug("Sending Message")
+	// 		agents := [][]float64{{0.1, 0.0}, {10.0, 10.0}}
+	// 		waypoints := [][]float64{{0.2, 0.0}, {20.0, 20.0}}
+	// 		u.SendSimulation(agents, waypoints, 1)
 
-			time.Sleep(5 * time.Second)
+	// 		time.Sleep(5 * time.Second)
 
-			agents = [][]float64{{1.1, 1.0}, {10.0, 10.0}}
-			waypoints = [][]float64{{0.2, 0.0}, {20.0, 20.0}}
-			u.SendSimulation(agents, waypoints, 2)
-			// logger.Debug("Stopping unity server")
-			// u.StopServer()
-			break
-		}
-	}
-	for {
-	}
+	// 		agents = [][]float64{{1.1, 1.0}, {10.0, 10.0}}
+	// 		waypoints = [][]float64{{0.2, 0.0}, {20.0, 20.0}}
+	// 		u.SendSimulation(agents, waypoints, 2)
+	// 		// logger.Debug("Stopping unity server")
+	// 		// u.StopServer()
+	// 		break
+	// 	}
+	// }
+	// for {
+	// }
 }
 
 // demoServer tests the API
