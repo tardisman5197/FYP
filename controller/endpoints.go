@@ -467,6 +467,14 @@ func (c *Controller) getAgentInfo(w http.ResponseWriter, r *http.Request) {
 
 // getAgentInfo gets information about a specified agent in a simualtion.
 func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
+	type info struct {
+		// Position stores the location that the camera should
+		// be set to.
+		Position []float64 `json:"cameraPosition"`
+		// Direction stores the location that the camera should
+		// point towards.
+		Direction []float64 `json:"cameraDirection"`
+	}
 	type response struct {
 		// Success is true if the simulation runs for the amount of steps
 		// specified.
@@ -505,6 +513,10 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 	i, _ := c.simulations.Load(id)
 	sim := i.(simulation.Simulation)
 
+	// parse the setup data
+	var cameraInfo info
+	_ = json.NewDecoder(r.Body).Decode(&cameraInfo)
+
 	positions, goals := sim.GetAgentPositions()
 
 	// Get the filepath for image
@@ -512,7 +524,9 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 		positions,
 		sim.GetWaypoints(),
 		goals,
-		sim.GetTick())
+		sim.GetTick(),
+		cameraInfo.Position,
+		cameraInfo.Direction)
 
 	if sendBase64Encoding {
 		// Open file and store the base64 encoding of it in the response

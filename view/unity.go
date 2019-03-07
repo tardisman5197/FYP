@@ -19,6 +19,12 @@ type message struct {
 	// Goals stores the x,y coordinates of each agent's current
 	// waypoint
 	Goals []vector2 `json:"goals"`
+	// CameraPosition stores the location that the camera should
+	// be assigned
+	CameraPosition []float64 `json:"cameraPosition"`
+	// CameraDirecrtion stores the location the camera should
+	// point towards
+	CameraDirection []float64 `json:"cameraDirection"`
 	// Tick stores the tick of the simulation which the
 	// information represents
 	Tick int `json:"tick"`
@@ -161,7 +167,7 @@ func (u *UnityServer) SendMessage(msg string) {
 }
 
 // SendSimulation creates a json string and sends it to the unity application.
-func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick int) {
+func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick int, camPos, camDir []float64) {
 	// Convert agents [][]float64 into []vector2
 	var agentVec []vector2
 	for i := 0; i < len(agents); i++ {
@@ -181,10 +187,12 @@ func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick 
 
 	// convert message to json string
 	jsonStr, err := json.Marshal(message{
-		Agents:    agentVec,
-		Waypoints: waypointVec,
-		Goals:     goalsVec,
-		Tick:      tick,
+		Agents:          agentVec,
+		Waypoints:       waypointVec,
+		Goals:           goalsVec,
+		Tick:            tick,
+		CameraPosition:  camPos,
+		CameraDirection: camDir,
 	})
 	if err != nil {
 		u.Logger.Error("Error: Converting to JSON")
@@ -265,8 +273,8 @@ func (u *UnityServer) Connected() bool {
 
 // GetImageFilepath sends the simulation to the unity application then
 // waits for a response. The filepath to the image gererated is returned.
-func (u *UnityServer) GetImageFilepath(agents, waypoints, goals [][]float64, tick int) string {
-	u.SendSimulation(agents, waypoints, goals, tick)
+func (u *UnityServer) GetImageFilepath(agents, waypoints, goals [][]float64, tick int, camPos, camDir []float64) string {
+	u.SendSimulation(agents, waypoints, goals, tick, camPos, camDir)
 	filepath := <-u.currentFilePath
 	u.Logger.Debugf("Filepath got - GetImage: %v", filepath)
 	return filepath
