@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"../view"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
@@ -67,9 +68,13 @@ func (c *Controller) setup(port string) {
 	router.HandleFunc("/shutdown", c.Shutdown).Methods("GET")
 
 	// Setup the http server
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
 	c.server = &http.Server{
 		Addr:           port,
-		Handler:        router,
+		Handler:        handlers.CORS(headersOk, originsOk, methodsOk)(router),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
