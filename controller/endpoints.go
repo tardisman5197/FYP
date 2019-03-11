@@ -582,13 +582,17 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 
 	if sendBase64Encoding {
 		// Open file and store the base64 encoding of it in the response
-		f, _ := os.Open(resp.Filepath)
+		f, err := os.Open(resp.Filepath)
+		if err != nil {
+			c.Logger.Error(err.Error())
+		}
 		defer f.Close()
 		// Read entire JPG into byte slice.
 		reader := bufio.NewReader(f)
 		content, _ := ioutil.ReadAll(reader)
 		// Encode as base64.
 		resp.Image = base64.StdEncoding.EncodeToString(content)
+		c.Logger.Debugf("Encoded image: %v", resp.Image)
 	}
 
 	resp.Success = true
