@@ -39,6 +39,7 @@ func (c *Controller) Shutdown(w http.ResponseWriter, r *http.Request) {
 
 	// Stop the server from listening
 	c.server.Shutdown(context.Background())
+	c.Logger.Info("Server Shutdown")
 
 }
 
@@ -93,6 +94,7 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 	// Generate the simulation environment
 	env := simulation.NewEnvironment()
 	// env.WriteShapeFile("resources/test.shp")
+	c.Logger.Debugf("Env Filepath: %v", simInfo.Environment)
 	env.ReadShapefile(simInfo.Environment)
 
 	// Create the simulation
@@ -109,6 +111,56 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(jsonStr))
 
 	c.Logger.Infof("New Simulation Created: %v", key)
+}
+
+// removeSimulation removes a specific simulation from the server.
+func (c *Controller) removeSimulation(w http.ResponseWriter, r *http.Request) {
+	// response is the information sent back to the client
+	// after the request has been executed.
+	type response struct {
+		// Success is bool that is true if a new sim has been
+		// created
+		Success bool `json:"success"`
+		// Error is a string that is filled if an error occurs
+		// while creating a new simulation.
+		Error string `json:"error"`
+	}
+
+	// Get the id from the url
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var resp response
+
+	// Check if the id exists
+	if _, ok := c.simulations.Load(id); !ok {
+		// No Simulation found send error
+		resp.Success = false
+		resp.Error = "No Simulation found with the id - " + id
+
+		// Encode response into json
+		jsonStr, _ := json.Marshal(resp)
+
+		// Send response
+		fmt.Fprint(w, string(jsonStr))
+
+		c.Logger.Warnf("No Simulation found with id: %v", id)
+		return
+	}
+
+	// remove the simulation from the server.
+	c.simulations.Delete(id)
+
+	// No Simulation found send error
+	resp.Success = true
+
+	// Encode response into json
+	jsonStr, _ := json.Marshal(resp)
+
+	// Send response
+	fmt.Fprint(w, string(jsonStr))
+	c.Logger.Infof("Simulation Removed: %v", id)
+	return
 }
 
 // runSimulation runs a specified simulation.
