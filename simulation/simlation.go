@@ -3,7 +3,6 @@ package simulation
 import (
 	"encoding/json"
 
-	"../view"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -69,7 +68,7 @@ func (s *Simulation) RunSteps(noOfSteps int) {
 		s.runOneStep()
 
 		// if i%5 == 0 {
-		s.getImage()
+		// s.getImage()
 		// }
 		if s.shouldStop {
 			break
@@ -264,17 +263,17 @@ func (s *Simulation) GetAgents() []Agent {
 	return s.agents
 }
 
-func (s *Simulation) getImage() {
-	var wp [][]float64
-	for _, cwp := range s.environment.waypoints {
-		wp = append(wp, cwp.ConvertToSlice())
-	}
+// func (s *Simulation) getImage() {
+// 	var wp [][]float64
+// 	for _, cwp := range s.environment.waypoints {
+// 		wp = append(wp, cwp.ConvertToSlice())
+// 	}
 
-	var a [][]float64
-	for _, ca := range s.agents {
-		cp := ca.GetPosition()
-		a = append(a, cp.ConvertToSlice())
-	}
+// 	var a [][]float64
+// 	for _, ca := range s.agents {
+// 		cp := ca.GetPosition()
+// 		a = append(a, cp.ConvertToSlice())
+// 	}
 
-	view.GenImg(wp, a, s.currentTick)
-}
+// 	view.GenImg(wp, a, s.currentTick)
+// }
