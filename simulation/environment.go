@@ -85,6 +85,26 @@ func (e *Environment) GetLightAt(pos Vector) (light Light, found bool) {
 	return light, false
 }
 
+// UpdateLight sets the stop bool of a given light.
+func (e *Environment) UpdateLight(id int, stop bool) {
+	for i := 0; i < len(e.lights); i++ {
+		if e.lights[i].GetID() == id {
+			e.lights[i].SetStop(stop)
+			return
+		}
+	}
+}
+
+// GetLight returns the light with a given id.
+func (e *Environment) GetLight(id int) (l Light, found bool) {
+	for i := 0; i < len(e.lights); i++ {
+		if e.lights[i].GetID() == id {
+			return e.lights[i], true
+		}
+	}
+	return l, false
+}
+
 // WriteShapeFile writes a test shape file.
 func (e *Environment) WriteShapeFile(fileName string) {
 	// points to write
