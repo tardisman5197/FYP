@@ -52,6 +52,8 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 		// Environment stores the filepath to the environment
 		// shape file
 		Environment string `json:"environment"`
+		// Lights stores a list of x,y coordinates of the traffic lights
+		Lights [][]float64 `json:"lights"`
 	}
 
 	// response is the information sent back to the client
@@ -94,9 +96,20 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the simulation environment
 	env := simulation.NewEnvironment()
+
 	// env.WriteShapeFile("resources/test.shp")
 	c.Logger.Debugf("Env Filepath: %v", simInfo.Environment)
 	env.ReadShapefile(simInfo.Environment)
+
+	// Add traffic lights to the enironment
+	for i := 0; i < len(simInfo.Lights); i++ {
+		if len(simInfo.Lights[i]) > 0 {
+			v := simulation.NewVector(simInfo.Lights[i][0], simInfo.Lights[i][1])
+			env.AddLight(v, true)
+		} else {
+			c.Logger.Warnf("Incorrect number of paramaters to create Light: %v", simInfo.Lights[i])
+		}
+	}
 
 	// Create the simulation
 	sim := simulation.NewSimulation(env)
