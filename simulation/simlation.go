@@ -300,18 +300,3 @@ func (s *Simulation) AddLight(pos Vector, stop bool) {
 func (s *Simulation) UpdateLight(id int, stop bool) {
 	s.environment.UpdateLight(id, stop)
 }
-
-// func (s *Simulation) getImage() {
-// 	var wp [][]float64
-// 	for _, cwp := range s.environment.waypoints {
-// 		wp = append(wp, cwp.ConvertToSlice())
-// 	}
-
-// 	var a [][]float64
-// 	for _, ca := range s.agents {
-// 		cp := ca.GetPosition()
-// 		a = append(a, cp.ConvertToSlice())
-// 	}
-
-// 	view.GenImg(wp, a, s.currentTick)
-// }

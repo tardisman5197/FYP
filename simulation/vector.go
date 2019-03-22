@@ -31,10 +31,7 @@ func (v *Vector) InRange(target Vector, margin float64) bool {
 
 // ConvertToSlice changes the vector into slice of float64s.
 func (v *Vector) ConvertToSlice() []float64 {
-	var s []float64
-	s = append(s, v.x)
-	s = append(s, v.y)
-	return s
+	return []float64{v.x, v.y}
 }
 
 // Equals checks if the given vector has the same values.
