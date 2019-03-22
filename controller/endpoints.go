@@ -661,6 +661,7 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 		// point towards.
 		Direction []float64 `json:"cameraDirection"`
 	}
+
 	type response struct {
 		// Success is true if the simulation runs for the amount of steps
 		// specified.
@@ -704,12 +705,15 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&cameraInfo)
 
 	positions, goals := sim.GetAgentPositions()
+	lightPostitions, lightStates := sim.GetLights()
 
 	// Get the filepath for image
 	resp.Filepath = c.unityViewer.GetImageFilepath(
 		positions,
 		sim.GetWaypoints(),
 		goals,
+		lightPostitions,
+		lightStates,
 		sim.GetTick(),
 		cameraInfo.Position,
 		cameraInfo.Direction)
