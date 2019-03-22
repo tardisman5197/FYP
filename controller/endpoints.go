@@ -52,6 +52,8 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 		// Environment stores the filepath to the environment
 		// shape file
 		Environment string `json:"environment"`
+		// Lights stores a list of x,y coordinates of the traffic lights
+		Lights [][]float64 `json:"lights"`
 	}
 
 	// response is the information sent back to the client
@@ -94,9 +96,20 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the simulation environment
 	env := simulation.NewEnvironment()
+
 	// env.WriteShapeFile("resources/test.shp")
 	c.Logger.Debugf("Env Filepath: %v", simInfo.Environment)
 	env.ReadShapefile(simInfo.Environment)
+
+	// Add traffic lights to the enironment
+	for i := 0; i < len(simInfo.Lights); i++ {
+		if len(simInfo.Lights[i]) > 0 {
+			v := simulation.NewVector(simInfo.Lights[i][0], simInfo.Lights[i][1])
+			env.AddLight(v, true)
+		} else {
+			c.Logger.Warnf("Incorrect number of paramaters to create Light: %v", simInfo.Lights[i])
+		}
+	}
 
 	// Create the simulation
 	sim := simulation.NewSimulation(env)
@@ -395,6 +408,126 @@ func (c *Controller) addAgent(w http.ResponseWriter, r *http.Request) {
 	c.Logger.Infof("Agents been added to sim: %v", id)
 }
 
+// addLight adds a new traffic light to a given simulation.
+func (c *Controller) addLight(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		// Success is true if the simulation runs for the amount of steps
+		// specified.
+		Success bool `json:"success"`
+		// Error is a string that is set if something goes wrong.
+		Error string `json:"error"`
+	}
+
+	type info struct {
+		Position []float64 `json:"position"`
+		Stop     bool      `json:"stop"`
+	}
+
+	// Get the id and type from the url
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var resp response
+
+	// Check if the id exists
+	if _, ok := c.simulations.Load(id); !ok {
+		// No Simulation found send error
+		resp.Success = false
+		resp.Error = "No Simulation found with the id - " + id
+
+		// Encode response into json
+		jsonStr, _ := json.Marshal(resp)
+
+		// Send response
+		fmt.Fprint(w, string(jsonStr))
+
+		c.Logger.Warnf("No Simulation found with id: %v", id)
+		return
+	}
+
+	// Parse the agent data
+	var lightInfo info
+	_ = json.NewDecoder(r.Body).Decode(&lightInfo)
+
+	// Get the simulation from the map
+	i, _ := c.simulations.Load(id)
+	sim := i.(simulation.Simulation)
+
+	sim.AddLight(simulation.NewVector(lightInfo.Position[0], lightInfo.Position[1]), lightInfo.Stop)
+
+	c.simulations.Store(id, sim)
+
+	resp.Success = true
+
+	// Encode response into json
+	jsonStr, _ := json.Marshal(resp)
+
+	// Send response
+	fmt.Fprint(w, string(jsonStr))
+	c.Logger.Debug("Light added")
+	return
+}
+
+// updateLight updates a traffic light in a given simulation.
+func (c *Controller) updateLight(w http.ResponseWriter, r *http.Request) {
+	type response struct {
+		// Success is true if the simulation runs for the amount of steps
+		// specified.
+		Success bool `json:"success"`
+		// Error is a string that is set if something goes wrong.
+		Error string `json:"error"`
+	}
+
+	type info struct {
+		ID   int  `json:"id"`
+		Stop bool `json:"stop"`
+	}
+
+	// Get the id and type from the url
+	params := mux.Vars(r)
+	id := params["id"]
+
+	var resp response
+
+	// Check if the id exists
+	if _, ok := c.simulations.Load(id); !ok {
+		// No Simulation found send error
+		resp.Success = false
+		resp.Error = "No Simulation found with the id - " + id
+
+		// Encode response into json
+		jsonStr, _ := json.Marshal(resp)
+
+		// Send response
+		fmt.Fprint(w, string(jsonStr))
+
+		c.Logger.Warnf("No Simulation found with id: %v", id)
+		return
+	}
+
+	// Parse the agent data
+	var lightInfo info
+	_ = json.NewDecoder(r.Body).Decode(&lightInfo)
+
+	// Get the simulation from the map
+	i, _ := c.simulations.Load(id)
+	sim := i.(simulation.Simulation)
+
+	sim.UpdateLight(lightInfo.ID, lightInfo.Stop)
+
+	c.simulations.Store(id, sim)
+
+	resp.Success = true
+
+	// Encode response into json
+	jsonStr, _ := json.Marshal(resp)
+
+	// Send response
+	fmt.Fprint(w, string(jsonStr))
+	c.Logger.Debug("Light Updated")
+	return
+}
+
 // getInfo gets information about a specified simualtion.
 func (c *Controller) getInfo(w http.ResponseWriter, r *http.Request) {
 	type response struct {
@@ -528,6 +661,7 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 		// point towards.
 		Direction []float64 `json:"cameraDirection"`
 	}
+
 	type response struct {
 		// Success is true if the simulation runs for the amount of steps
 		// specified.
@@ -571,12 +705,15 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&cameraInfo)
 
 	positions, goals := sim.GetAgentPositions()
+	lightPostitions, lightStates := sim.GetLights()
 
 	// Get the filepath for image
 	resp.Filepath = c.unityViewer.GetImageFilepath(
 		positions,
 		sim.GetWaypoints(),
 		goals,
+		lightPostitions,
+		lightStates,
 		sim.GetTick(),
 		cameraInfo.Position,
 		cameraInfo.Direction)

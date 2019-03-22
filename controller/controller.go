@@ -61,6 +61,8 @@ func (c *Controller) setup(port string) {
 	router.HandleFunc("/simulation/run/{id}", c.runSimulation).Methods("POST")
 	router.HandleFunc("/simulation/stop/{id}", c.stopSimulation).Methods("GET")
 	router.HandleFunc("/simulation/add/{id}", c.addAgent).Methods("POST")
+	router.HandleFunc("/simulation/light/add/{id}", c.addLight).Methods("POST")
+	router.HandleFunc("/simulation/light/update/{id}", c.updateLight).Methods("POST")
 	router.HandleFunc("/simulation/info/agent/{id}/{agentId}", c.getAgentInfo).Methods("GET")
 	router.HandleFunc("/simulation/info/{id}", c.getInfo).Methods("GET")
 	router.HandleFunc("/simulation/view/{id}", c.getImage).Methods("POST")

@@ -150,8 +150,14 @@ func (s *Simulation) removeAgent(index int) {
 // GetInfo returns a json string containing the current information
 // of the simulation.
 func (s *Simulation) GetInfo() string {
+	type lightInfo struct {
+		Stop     bool      `json:"stop"`
+		Position []float64 `json:"position"`
+		ID       int       `json:"id"`
+	}
 	type envInfo struct {
 		Waypoints [][]float64 `json:"waypoints"`
+		Lights    []lightInfo `json:"lights"`
 	}
 
 	type agentInfo struct {
@@ -186,6 +192,26 @@ func (s *Simulation) GetInfo() string {
 	for _, waypoint := range s.environment.GetWaypoints() {
 		env.Waypoints = append(env.Waypoints, waypoint.ConvertToSlice())
 	}
+
+	// Convert lights to []lightInfo
+	lights := s.environment.GetLights()
+	var lightsInfo []lightInfo
+	// Loop through the lights
+	for _, light := range lights {
+		var cli lightInfo
+
+		cli.ID = light.GetID()
+		cli.Stop = light.GetStop()
+
+		// Convert the position from vector to []float64
+		lightPos := light.GetPosition()
+		cli.Position = lightPos.ConvertToSlice()
+
+		lightsInfo = append(lightsInfo, cli)
+	}
+
+	env.Lights = lightsInfo
+
 	sim.Environment = env
 
 	// Sets the agent information
@@ -263,17 +289,25 @@ func (s *Simulation) GetAgents() []Agent {
 	return s.agents
 }
 
-// func (s *Simulation) getImage() {
-// 	var wp [][]float64
-// 	for _, cwp := range s.environment.waypoints {
-// 		wp = append(wp, cwp.ConvertToSlice())
-// 	}
+// AddLight adds a traffic light at the given position with
+// the stop state specified.
+func (s *Simulation) AddLight(pos Vector, stop bool) {
+	s.environment.AddLight(pos, stop)
+}
 
-// 	var a [][]float64
-// 	for _, ca := range s.agents {
-// 		cp := ca.GetPosition()
-// 		a = append(a, cp.ConvertToSlice())
-// 	}
+// UpdateLight updates the state of a given light in the
+// simulation.
+func (s *Simulation) UpdateLight(id int, stop bool) {
+	s.environment.UpdateLight(id, stop)
+}
 
-// 	view.GenImg(wp, a, s.currentTick)
-// }
+// GetLights returns the positions and current states of all the lights in
+// the environment in the form of [][]flaot64 and []bool.
+func (s *Simulation) GetLights() (positions [][]float64, states []bool) {
+	for _, light := range s.environment.GetLights() {
+		currentPos := light.GetPosition()
+		positions = append(positions, currentPos.ConvertToSlice())
+		states = append(states, light.GetStop())
+	}
+	return
+}

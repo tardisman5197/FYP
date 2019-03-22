@@ -40,7 +40,7 @@ func main() {
 func demoModel() {
 	// Create the environment
 	env := simulation.NewEnvironment()
-	env.WriteShapeFile("resources/test.shp")
+	// env.WriteShapeFile("resources/intersect.shp")
 	env.ReadShapefile("resources/test.shp")
 
 	waypoints := env.GetWaypoints()

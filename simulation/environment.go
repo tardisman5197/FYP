@@ -11,6 +11,8 @@ import (
 type Environment struct {
 	// waypoints store the locations of the road network
 	waypoints []Vector
+	// lights store the traffic lights in the environment
+	lights []Light
 
 	// Logger is used to give a context based log to the stdout
 	Logger *log.Entry
@@ -60,14 +62,65 @@ func (e *Environment) ReadShapefile(fileName string) {
 	e.Logger.Debug(e.waypoints)
 }
 
+// AddLight adds a new traffic light to the environment.
+func (e *Environment) AddLight(pos Vector, stop bool) {
+	light := NewLight(len(e.lights), pos, stop)
+	e.lights = append(e.lights, light)
+}
+
+// GetLights retuns the lights in the environment.
+func (e *Environment) GetLights() []Light {
+	return e.lights
+}
+
+// GetLightAt retuns the Light at a given position. If no light
+// is found false is returned.
+func (e *Environment) GetLightAt(pos Vector) (light Light, found bool) {
+	for i := 0; i < len(e.lights); i++ {
+		currentLightPos := e.lights[i].GetPosition()
+		if currentLightPos.Equals(pos) {
+			return e.lights[i], true
+		}
+	}
+	return light, false
+}
+
+// UpdateLight sets the stop bool of a given light.
+func (e *Environment) UpdateLight(id int, stop bool) {
+	for i := 0; i < len(e.lights); i++ {
+		if e.lights[i].GetID() == id {
+			e.lights[i].SetStop(stop)
+			return
+		}
+	}
+}
+
+// GetLight returns the light with a given id.
+func (e *Environment) GetLight(id int) (l Light, found bool) {
+	for i := 0; i < len(e.lights); i++ {
+		if e.lights[i].GetID() == id {
+			return e.lights[i], true
+		}
+	}
+	return l, false
+}
+
 // WriteShapeFile writes a test shape file.
 func (e *Environment) WriteShapeFile(fileName string) {
 	// points to write
 	points := []shp.Point{
-		shp.Point{0.0, 0.0},
-		shp.Point{300.0, 300.0},
-		shp.Point{200.0, 300.0},
-		shp.Point{100.0, 200.0},
+		shp.Point{50.0, 0.0},
+		shp.Point{50.0, 50.0},
+		shp.Point{0.0, 50.0},
+		shp.Point{0.0, 55.0},
+		shp.Point{50.0, 55.0},
+		shp.Point{50.0, 100.0},
+		shp.Point{55.0, 100.0},
+		shp.Point{55.0, 55.0},
+		shp.Point{100.0, 55.0},
+		shp.Point{100.0, 50.0},
+		shp.Point{55.0, 50.0},
+		shp.Point{55.0, 0.0},
 	}
 
 	// fields to write

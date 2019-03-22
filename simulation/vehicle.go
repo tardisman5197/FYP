@@ -84,7 +84,7 @@ func (v Vehicle) Act(agents []Agent, env Environment) (Agent, bool) {
 	}
 
 	// Update speed based on surroundings
-	v.updateSpeed(agents)
+	v.updateSpeed(agents, env)
 
 	// Update the position of the vehicle
 	v.updatePosition()
@@ -187,11 +187,30 @@ func (v Vehicle) SetFrequency(freq int) Agent {
 
 // updateVelocity calculates the vehicles next velocity based upon
 // the vehicle's surroundings.
-func (v *Vehicle) updateSpeed(agents []Agent) {
-	// 1. Slow down to touch waypoint
-	// 2. Slow down due to other agents
-	// 3. Accelerate if space
-	// 4. Random Decelerate
+func (v *Vehicle) updateSpeed(agents []Agent, env Environment) {
+	// 1. Slow down for lights
+	// 2. Slow down to touch waypoint
+	// 3. Slow down due to other agents
+	// 4. Accelerate if space
+	// 5. Random Decelerate
+
+	// Slow down for lights
+	light, found := env.GetLightAt(v.currentWaypoint)
+	// Check if there is a light infront and
+	// if it indicates stop
+	if found && light.GetStop() {
+		// Get the distance to the traffic light
+		distanceToLight := v.position.DistanceTo(light.GetPosition())
+
+		// If the vehicle is going to pass the light stop
+		if distanceToLight <= v.speed+v.acceleration {
+			// Stop the vehicle
+			v.speed = 0
+
+			v.Logger.Debugf("Light, v: %v", v.speed)
+			return
+		}
+	}
 
 	// Slow down to touch waypoint
 	distanceToWaypoint := v.position.DistanceTo(v.currentWaypoint)
