@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -50,10 +51,6 @@ type vector2 struct {
 	Y float64 `json:"y"`
 }
 
-type light struct {
-	Position []float64
-}
-
 // UnityServer handels the communication between the go application and
 // the unity application.
 type UnityServer struct {
@@ -97,6 +94,7 @@ func NewUnityServer(port string) UnityServer {
 
 // startUnityApp runs the unity application executable.
 func (u *UnityServer) startUnityApp() {
+	u.Logger.Debugf("Path: %v", pathToUnity)
 	if pathToUnity != "" {
 		u.unityApp = exec.Command(pathToUnity)
 		u.unityApp.Run()
@@ -272,6 +270,33 @@ func (u *UnityServer) parseMessage(msg string) {
 // application.
 func (u *UnityServer) StopServer() {
 	u.stop <- true
+
+	if removeImagesOnShutdown {
+		// Remove all the pictures created
+		u.Logger.Infof("Removing Images in: %v ", pathToImages)
+		d, err := os.Open(pathToImages)
+		if err != nil {
+			u.Logger.Error(err.Error())
+		}
+		defer d.Close()
+
+		files, err := d.Readdir(-1)
+		if err != nil {
+			u.Logger.Error(err.Error())
+		}
+
+		for _, file := range files {
+			if file.Mode().IsRegular() {
+				if filepath.Ext(file.Name()) == ".png" {
+					err = os.Remove(pathToImages + file.Name())
+					// u.Logger.Debugf("Removing: %v", file.Name())
+					if err != nil {
+						u.Logger.Error(err.Error())
+					}
+				}
+			}
+		}
+	}
 }
 
 // disconnect cloeses the communication between the server and unity
