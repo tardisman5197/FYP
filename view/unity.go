@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -19,6 +20,12 @@ type message struct {
 	// Goals stores the x,y coordinates of each agent's current
 	// waypoint
 	Goals []vector2 `json:"goals"`
+	// LightPostions store the positions of all the traffic lights in
+	// the simulation
+	LightPostions []vector2 `json:"lightPositions"`
+	// LightStates stores the current states of all the lights in
+	// the simulation
+	LightStates []bool `json:"lightStates"`
 	// CameraPosition stores the location that the camera should
 	// be assigned
 	CameraPosition []float64 `json:"cameraPosition"`
@@ -87,6 +94,7 @@ func NewUnityServer(port string) UnityServer {
 
 // startUnityApp runs the unity application executable.
 func (u *UnityServer) startUnityApp() {
+	u.Logger.Debugf("Path: %v", pathToUnity)
 	if pathToUnity != "" {
 		u.unityApp = exec.Command(pathToUnity)
 		u.unityApp.Run()
@@ -167,7 +175,7 @@ func (u *UnityServer) SendMessage(msg string) {
 }
 
 // SendSimulation creates a json string and sends it to the unity application.
-func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick int, camPos, camDir []float64) {
+func (u *UnityServer) SendSimulation(agents, waypoints, goals, lightPositions [][]float64, lightStates []bool, tick int, camPos, camDir []float64) {
 	// Convert agents [][]float64 into []vector2
 	var agentVec []vector2
 	for i := 0; i < len(agents); i++ {
@@ -180,11 +188,16 @@ func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick 
 		waypointVec = append(waypointVec, vector2{X: waypoints[i][0], Y: waypoints[i][1]})
 	}
 
+	// Convert goals [][]float64 into []vector2
 	var goalsVec []vector2
 	for i := 0; i < len(goals); i++ {
 		goalsVec = append(goalsVec, vector2{X: goals[i][0], Y: goals[i][1]})
 	}
 
+	var lightsVec []vector2
+	for i := 0; i < len(lightPositions); i++ {
+		lightsVec = append(lightsVec, vector2{X: lightPositions[i][0], Y: lightPositions[i][1]})
+	}
 	// convert message to json string
 	jsonStr, err := json.Marshal(message{
 		Agents:          agentVec,
@@ -193,6 +206,8 @@ func (u *UnityServer) SendSimulation(agents, waypoints, goals [][]float64, tick 
 		Tick:            tick,
 		CameraPosition:  camPos,
 		CameraDirection: camDir,
+		LightPostions:   lightsVec,
+		LightStates:     lightStates,
 	})
 	if err != nil {
 		u.Logger.Error("Error: Converting to JSON")
@@ -255,6 +270,33 @@ func (u *UnityServer) parseMessage(msg string) {
 // application.
 func (u *UnityServer) StopServer() {
 	u.stop <- true
+
+	if removeImagesOnShutdown {
+		// Remove all the pictures created
+		u.Logger.Infof("Removing Images in: %v ", pathToImages)
+		d, err := os.Open(pathToImages)
+		if err != nil {
+			u.Logger.Error(err.Error())
+		}
+		defer d.Close()
+
+		files, err := d.Readdir(-1)
+		if err != nil {
+			u.Logger.Error(err.Error())
+		}
+
+		for _, file := range files {
+			if file.Mode().IsRegular() {
+				if filepath.Ext(file.Name()) == ".png" {
+					err = os.Remove(pathToImages + file.Name())
+					// u.Logger.Debugf("Removing: %v", file.Name())
+					if err != nil {
+						u.Logger.Error(err.Error())
+					}
+				}
+			}
+		}
+	}
 }
 
 // disconnect cloeses the communication between the server and unity
@@ -273,8 +315,8 @@ func (u *UnityServer) Connected() bool {
 
 // GetImageFilepath sends the simulation to the unity application then
 // waits for a response. The filepath to the image gererated is returned.
-func (u *UnityServer) GetImageFilepath(agents, waypoints, goals [][]float64, tick int, camPos, camDir []float64) string {
-	u.SendSimulation(agents, waypoints, goals, tick, camPos, camDir)
+func (u *UnityServer) GetImageFilepath(agents, waypoints, goals, lightPositions [][]float64, lightStates []bool, tick int, camPos, camDir []float64) string {
+	u.SendSimulation(agents, waypoints, goals, lightPositions, lightStates, tick, camPos, camDir)
 	filepath := <-u.currentFilePath
 	u.Logger.Debugf("Filepath got - GetImage: %v", filepath)
 	return filepath

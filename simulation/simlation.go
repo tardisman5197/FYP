@@ -300,3 +300,14 @@ func (s *Simulation) AddLight(pos Vector, stop bool) {
 func (s *Simulation) UpdateLight(id int, stop bool) {
 	s.environment.UpdateLight(id, stop)
 }
+
+// GetLights returns the positions and current states of all the lights in
+// the environment in the form of [][]flaot64 and []bool.
+func (s *Simulation) GetLights() (positions [][]float64, states []bool) {
+	for _, light := range s.environment.GetLights() {
+		currentPos := light.GetPosition()
+		positions = append(positions, currentPos.ConvertToSlice())
+		states = append(states, light.GetStop())
+	}
+	return
+}
