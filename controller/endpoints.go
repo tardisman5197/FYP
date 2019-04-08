@@ -453,7 +453,22 @@ func (c *Controller) addLight(w http.ResponseWriter, r *http.Request) {
 	i, _ := c.simulations.Load(id)
 	sim := i.(simulation.Simulation)
 
-	sim.AddLight(simulation.NewVector(lightInfo.Position[0], lightInfo.Position[1]), lightInfo.Stop)
+	if len(lightInfo.Position) == 2 {
+		sim.AddLight(simulation.NewVector(lightInfo.Position[0], lightInfo.Position[1]), lightInfo.Stop)
+	} else {
+		// No Simulation found send error
+		resp.Success = false
+		resp.Error = "Wrong number of coordinates given"
+
+		// Encode response into json
+		jsonStr, _ := json.Marshal(resp)
+
+		// Send response
+		fmt.Fprint(w, string(jsonStr))
+
+		c.Logger.Warnf("No Simulation found with id: %v", id)
+		return
+	}
 
 	c.simulations.Store(id, sim)
 
