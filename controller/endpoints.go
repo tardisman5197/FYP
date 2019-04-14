@@ -18,6 +18,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// response is the information sent back to the client
+// after the request has been executed.
+type response struct {
+	// Success is bool that is true if a new sim has been
+	// created
+	Success bool `json:"success"`
+	// Error is a string that is filled if an error occurs
+	// while creating a new simulation.
+	Error string `json:"error"`
+}
+
 // test responds to the request with a simple message
 func (c *Controller) test(w http.ResponseWriter, r *http.Request) {
 	c.Logger.Debug("Received: " + html.EscapeString(r.URL.Path))
@@ -129,17 +140,6 @@ func (c *Controller) newSimulation(w http.ResponseWriter, r *http.Request) {
 
 // removeSimulation removes a specific simulation from the server.
 func (c *Controller) removeSimulation(w http.ResponseWriter, r *http.Request) {
-	// response is the information sent back to the client
-	// after the request has been executed.
-	type response struct {
-		// Success is bool that is true if a new sim has been
-		// created
-		Success bool `json:"success"`
-		// Error is a string that is filled if an error occurs
-		// while creating a new simulation.
-		Error string `json:"error"`
-	}
-
 	// Get the id from the url
 	params := mux.Vars(r)
 	id := params["id"]
@@ -184,14 +184,6 @@ func (c *Controller) runSimulation(w http.ResponseWriter, r *http.Request) {
 		// If the number is negative the simulation should run until
 		// it is told to stop.
 		Steps int `json:"steps"`
-	}
-
-	type response struct {
-		// Success is true if the simulation runs for the amount of steps
-		// specified.
-		Success bool `json:"success"`
-		// Error is a string that is set if something goes wrong.
-		Error string `json:"error"`
 	}
 
 	// parse the setup data
@@ -257,14 +249,6 @@ func (c *Controller) runSimulation(w http.ResponseWriter, r *http.Request) {
 
 // stopSimulation stops a specified simulation.
 func (c *Controller) stopSimulation(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		// Success is true if the simulation runs for the amount of steps
-		// specified.
-		Success bool `json:"success"`
-		// Error is a string that is set if something goes wrong.
-		Error string `json:"error"`
-	}
-
 	var resp response
 
 	// Get the id from the url
@@ -318,14 +302,6 @@ func (c *Controller) addAgent(w http.ResponseWriter, r *http.Request) {
 
 	type info struct {
 		Agents []agentInfo `json:"agents"`
-	}
-
-	type response struct {
-		// Success is true if the simulation runs for the amount of steps
-		// specified.
-		Success bool `json:"success"`
-		// Error is a string that is set if something goes wrong.
-		Error string `json:"error"`
 	}
 
 	var resp response
@@ -410,14 +386,6 @@ func (c *Controller) addAgent(w http.ResponseWriter, r *http.Request) {
 
 // addLight adds a new traffic light to a given simulation.
 func (c *Controller) addLight(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		// Success is true if the simulation runs for the amount of steps
-		// specified.
-		Success bool `json:"success"`
-		// Error is a string that is set if something goes wrong.
-		Error string `json:"error"`
-	}
-
 	type info struct {
 		Position []float64 `json:"position"`
 		Stop     bool      `json:"stop"`
@@ -470,14 +438,6 @@ func (c *Controller) addLight(w http.ResponseWriter, r *http.Request) {
 
 // updateLight updates a traffic light in a given simulation.
 func (c *Controller) updateLight(w http.ResponseWriter, r *http.Request) {
-	type response struct {
-		// Success is true if the simulation runs for the amount of steps
-		// specified.
-		Success bool `json:"success"`
-		// Error is a string that is set if something goes wrong.
-		Error string `json:"error"`
-	}
-
 	type info struct {
 		ID   int  `json:"id"`
 		Stop bool `json:"stop"`
@@ -745,6 +705,5 @@ func (c *Controller) getImage(w http.ResponseWriter, r *http.Request) {
 
 	// Send json to client
 	fmt.Fprint(w, string(jsonStr))
-
 	c.Logger.Infof("Image sent of sim: %v - %v", id, resp.Filepath)
 }

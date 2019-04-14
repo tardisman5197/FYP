@@ -365,7 +365,7 @@ func (v *Vehicle) getVehicleInfront(agents []Agent) (closest Agent, distance flo
 		if a.GetID() != v.GetID() {
 			// Check if the agent is travelling in the same direction
 			if v.currentWaypoint.Equals(a.GetCurrentWaypoint()) {
-				// Get Calculate the distance between the current agent
+				// Calculate the distance between the current agent
 				// and its current waypoint
 				aPosition := a.GetPosition()
 				agentToWaypoint := aPosition.DistanceTo(a.GetCurrentWaypoint())

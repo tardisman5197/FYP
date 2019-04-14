@@ -66,10 +66,7 @@ func (s *Simulation) Run() {
 func (s *Simulation) RunSteps(noOfSteps int) {
 	for i := 0; i < noOfSteps; i++ {
 		s.runOneStep()
-
-		// if i%5 == 0 {
-		// s.getImage()
-		// }
+		
 		if s.shouldStop {
 			break
 		}
