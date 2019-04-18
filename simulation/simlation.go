@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"encoding/json"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -64,13 +65,17 @@ func (s *Simulation) Run() {
 // RunSteps runs the simulation a specified number or until the simulation's
 // shouldStop variable is set to true.
 func (s *Simulation) RunSteps(noOfSteps int) {
+	start := time.Now()
 	for i := 0; i < noOfSteps; i++ {
 		s.runOneStep()
-		
+
 		if s.shouldStop {
 			break
 		}
 	}
+	elapsed := time.Since(start)
+	s.Logger.Infof("Current Tick: %v, No Of Agents: %v", s.currentTick, len(s.agents))
+	s.Logger.Infof("Execution Time: %v, Steps: %v", elapsed, noOfSteps)
 }
 
 // runOneStep simulates a single second in the simulation.
@@ -79,7 +84,7 @@ func (s *Simulation) runOneStep() {
 	var toRemove []int
 
 	s.currentTick++
-	s.Logger.Infof("Current Tick: %v", s.currentTick)
+	s.Logger.Debugf("Current Tick: %v", s.currentTick)
 
 	// Spawn agents that have a frequency
 	for _, agent := range s.agentsToSpawn {
@@ -108,6 +113,8 @@ func (s *Simulation) runOneStep() {
 	for i := 0; i < len(toRemove); i++ {
 		s.removeAgent(toRemove[i])
 	}
+
+	s.Logger.Debugf("No Of Agents: %v", len(s.agents))
 }
 
 // Stop sets the simulation's shouldStop variable to true.

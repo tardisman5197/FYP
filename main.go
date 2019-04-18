@@ -19,7 +19,8 @@ func init() {
 	// Output to stdout instead of the default stderr
 	log.SetOutput(os.Stdout)
 	// Only display Debug or higher
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.InfoLevel)
 }
 
 // main is ran when the application is executed. Main setsup a controller and
