@@ -66,7 +66,7 @@ func (s *Simulation) Run() {
 func (s *Simulation) RunSteps(noOfSteps int) {
 	for i := 0; i < noOfSteps; i++ {
 		s.runOneStep()
-		
+
 		if s.shouldStop {
 			break
 		}
@@ -119,7 +119,6 @@ func (s *Simulation) Stop() {
 
 // AddAgent adds an agent to the simulation.
 func (s *Simulation) AddAgent(newAgent Agent) {
-
 	// if the frequency is more than 0 the agent
 	// needs to be spawned more than once
 	if newAgent.GetFrequency() > 0 {
@@ -193,6 +192,7 @@ func (s *Simulation) GetInfo() string {
 	// Convert lights to []lightInfo
 	lights := s.environment.GetLights()
 	var lightsInfo []lightInfo
+
 	// Loop through the lights
 	for _, light := range lights {
 		var cli lightInfo
@@ -254,7 +254,6 @@ func (s *Simulation) GetAgent(id int) Agent {
 // GetAgentPositions retuns the positions of all the agents in the simulation.
 // It also retuns the current waypoint for each agent.
 func (s *Simulation) GetAgentPositions() (positions [][]float64, goals [][]float64) {
-
 	// Loop through all the agents and get their positions in a []float64
 	// format and append them to the results
 	for _, agent := range s.agents {

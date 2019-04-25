@@ -26,16 +26,19 @@ type Controller struct {
 	Logger *log.Entry
 }
 
-// NewController ...
+// NewController creates a new controller struct
 func NewController(apiPort, unityPort string) (Controller, error) {
 	var c Controller
+
 	c.setup(apiPort)
 	c.unityViewer = view.NewUnityServer(unityPort)
+
 	err := c.unityViewer.StartServer()
 	if err != nil {
 		c.Logger.Errorf("Error: starting unityServer - %v", err)
 		return c, err
 	}
+
 	return c, nil
 }
 

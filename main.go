@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"./controller"
-	"./simulation"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,8 +15,10 @@ func init() {
 		DisableTimestamp: false,
 		FullTimestamp:    true,
 	})
+
 	// Output to stdout instead of the default stderr
 	log.SetOutput(os.Stdout)
+
 	// Only display Debug or higher
 	log.SetLevel(log.DebugLevel)
 }
@@ -28,96 +29,19 @@ func main() {
 	logger := log.WithFields(log.Fields{"package": "main"})
 	logger.Info("Server Starting")
 
-	// demoModel()
-	// demoUnity()
 	demoServer()
 
 	// Once the http server is no longer listening the server stops
 	logger.Warn("Server Stopping")
 }
 
-// demoModel test the traffic model
-func demoModel() {
-	// Create the environment
-	env := simulation.NewEnvironment()
-	// env.WriteShapeFile("resources/intersect.shp")
-	env.ReadShapefile("resources/test.shp")
-
-	waypoints := env.GetWaypoints()
-
-	// Test Sim
-	sim := simulation.NewSimulation(env)
-
-	// TEMP Setup test vehicle
-
-	startLoc := simulation.NewVector(0, 0)
-	route := waypoints[1:]
-	startSpeed := 0.0
-
-	id := 0
-	maxSpeed := 8.0
-	acc := 3.0
-	dec := 3.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
-
-	sim.RunSteps(5)
-
-	id = 1
-	maxSpeed = 10.0
-	acc = 3.0
-	dec = 3.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
-
-	sim.RunSteps(5)
-
-	id = 2
-	maxSpeed = 10.0
-	acc = 4.0
-	dec = 4.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
-
-	sim.RunSteps(5)
-
-	id = 3
-	maxSpeed = 80.0
-	acc = 5.0
-	dec = 5.0
-	sim.AddAgent(simulation.NewVehicle(id, startLoc, startSpeed, maxSpeed, acc, dec, route, 0))
-
-	sim.RunSteps(100)
-}
-
-// demoUnity test unity server
-func demoUnity() {
-	// u := view.NewUnityServer(":6666")
-	// u.StartServer()
-	// for {
-	// 	if u.Connected() {
-	// 		logger.Debug("Sending Message")
-	// 		agents := [][]float64{{0.1, 0.0}, {10.0, 10.0}}
-	// 		waypoints := [][]float64{{0.2, 0.0}, {20.0, 20.0}}
-	// 		u.SendSimulation(agents, waypoints, 1)
-
-	// 		time.Sleep(5 * time.Second)
-
-	// 		agents = [][]float64{{1.1, 1.0}, {10.0, 10.0}}
-	// 		waypoints = [][]float64{{0.2, 0.0}, {20.0, 20.0}}
-	// 		u.SendSimulation(agents, waypoints, 2)
-	// 		// logger.Debug("Stopping unity server")
-	// 		// u.StopServer()
-	// 		break
-	// 	}
-	// }
-	// for {
-	// }
-}
-
 // demoServer tests the API
 func demoServer() {
-	// Create a controler and start listening
+	// Create a controller and start listening
 	c, err := controller.NewController(serverAddr, unityAddr)
 	if err != nil {
 		panic(err)
 	}
+
 	c.Listen()
 }

@@ -263,7 +263,6 @@ func (u *UnityServer) parseMessage(msg string) {
 	}
 	u.Logger.Debugf("Setting currentFilepath: %v", r.Filepath)
 	u.currentFilePath <- r.Filepath
-
 }
 
 // StopServer closes the communication between the server and unity

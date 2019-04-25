@@ -52,7 +52,6 @@ func (c *Controller) Shutdown(w http.ResponseWriter, r *http.Request) {
 	// Stop the server from listening
 	c.server.Shutdown(context.Background())
 	c.Logger.Info("Server Shutdown")
-
 }
 
 // newSimulation creates and adds a simulation to the controller.
@@ -196,6 +195,7 @@ func (c *Controller) runSimulation(w http.ResponseWriter, r *http.Request) {
 	// Get the id from the url
 	params := mux.Vars(r)
 	id := params["id"]
+
 	// Check if the id exists
 	if _, ok := c.simulations.Load(id); !ok {
 		// No Simulation found send error
@@ -254,6 +254,7 @@ func (c *Controller) stopSimulation(w http.ResponseWriter, r *http.Request) {
 	// Get the id from the url
 	params := mux.Vars(r)
 	id := params["id"]
+
 	// Check if the id exists
 	if _, ok := c.simulations.Load(id); !ok {
 		// No Simulation found send error
@@ -528,7 +529,6 @@ func (c *Controller) getInfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(jsonStr))
 
 	c.Logger.Infof("Info returned for sim: %v", id)
-
 }
 
 // getAgentInfo gets information about a specified agent in a simualtion.
@@ -608,7 +608,6 @@ func (c *Controller) getAgentInfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(jsonStr))
 
 	c.Logger.Infof("Info returned for sim: %v", id)
-
 }
 
 // getAgentInfo gets information about a specified agent in a simualtion.
